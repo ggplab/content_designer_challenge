@@ -225,7 +225,8 @@ async function sendFollowup(token: string, content: string): Promise<void> {
 async function processVerification(
   displayName: string,
   rawLinks: string[],
-  token: string
+  token: string,
+  isPublic: boolean
 ): Promise<void> {
   const links = rawLinks
     .map((l) => l.trim())
@@ -266,7 +267,7 @@ async function processVerification(
         url,
         weekLabel,
         summary,
-        "",
+        isPublic ? "public" : "private",
       ]);
       results.push({ platform, url });
       console.log(`✅ Sheets 저장: ${platform} — ${url}`);
@@ -282,7 +283,17 @@ async function processVerification(
 
   // 결과 메시지 조합
   let msg = `✅ ${displayName}님, ${weekLabel} 인증 완료! 🎉\n\n`;
-  if (results.length === 1) {
+  if (!isPublic) {
+    msg += "🔒 링크 비공개로 저장했습니다.\n";
+    if (results.length === 1) {
+      msg += `📌 ${results[0].platform} 1건 등록`;
+    } else {
+      msg += `📌 ${results.length}개 플랫폼 등록:\n`;
+      for (const { platform } of results) {
+        msg += `• ${platform}\n`;
+      }
+    }
+  } else if (results.length === 1) {
     msg += `📌 ${results[0].platform}\n${results[0].url}`;
   } else {
     msg += `📌 ${results.length}개 플랫폼 등록:\n`;
@@ -296,7 +307,7 @@ async function processVerification(
 
 // ── 모달 정의 ─────────────────────────────────────────────────────────────────
 
-function buildModal() {
+function buildModal(isPublic: boolean) {
   const fields = [
     { id: "link1", label: "링크 1 (필수)", required: true },
     { id: "link2", label: "링크 2", required: false },
@@ -308,7 +319,7 @@ function buildModal() {
   return {
     type: 9,
     data: {
-      custom_id: "verify_modal",
+      custom_id: `verify_modal:${isPublic ? "public" : "private"}`,
       title: "콘텐츠 인증",
       components: fields.map(({ id, label, required }) => ({
         type: 1,
@@ -361,7 +372,12 @@ Deno.serve(async (req: Request) => {
 
   // type 2: /인증 슬래시 커맨드 → 모달 표시
   if (interaction.type === 2) {
-    return json(buildModal());
+    const isPublic = Boolean(
+      // deno-lint-ignore no-explicit-any
+      (interaction.data?.options ?? []).find((opt: any) => opt.name === "public")
+        ?.value === true
+    );
+    return json(buildModal(isPublic));
   }
 
   // type 5: 모달 제출 → deferred + 백그라운드 처리
@@ -375,9 +391,11 @@ Deno.serve(async (req: Request) => {
       // deno-lint-ignore no-explicit-any
       (row: any) => row.components?.[0]?.value ?? ""
     );
+    const customId: string = interaction.data?.custom_id ?? "";
+    const isPublic = customId.endsWith(":public");
 
     EdgeRuntime.waitUntil(
-      processVerification(displayName, rawLinks, interaction.token)
+      processVerification(displayName, rawLinks, interaction.token, isPublic)
     );
 
     return json({ type: 5 }); // DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE

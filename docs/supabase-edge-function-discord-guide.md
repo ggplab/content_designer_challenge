@@ -8,7 +8,8 @@
 
 ## 1. 무엇을 했는가 (작업 요약)
 
-Discord 슬래시 커맨드 `/인증`을 누르면 모달 팝업이 열리고, 참여자가 최대 5개의 SNS 링크를 입력하면 자동으로 AI가 분석해 Google Sheets에 기록하고 Discord에 완료 메시지를 보내는 시스템을 구축했다.
+Discord 슬래시 커맨드 `/인증`을 누르면 모달 팝업이 열리고, 참여자가 최대 5개의 SNS 링크를 입력하면 자동으로 AI가 분석해 Google Sheets에 기록하고 Discord에 완료 메시지를 보내는 시스템을 구축했다.  
+추가로 슬래시 옵션 `public`(true/false)로 링크 공개 여부를 선택할 수 있게 확장했다.
 
 핵심은 n8n Webhook 기반이었던 기존 아키텍처를 Supabase Edge Function (Deno 2) 기반으로 전면 교체한 것이다.
 
@@ -159,7 +160,18 @@ curl -X POST \
   https://discord.com/api/v10/applications/<APPLICATION_ID>/guilds/<GUILD_ID>/commands \
   -H "Authorization: Bot <TOKEN>" \
   -H "Content-Type: application/json" \
-  -d '{"name":"인증","description":"콘텐츠 인증 (최대 5개 링크 입력 가능)"}'
+  -d '{
+    "name":"인증",
+    "description":"콘텐츠 인증 (최대 5개 링크 입력 가능)",
+    "options":[
+      {
+        "type":5,
+        "name":"public",
+        "description":"인증 완료 메시지에 링크를 공개할지 여부",
+        "required":false
+      }
+    ]
+  }'
 ```
 
 ### Step 8. Interactions Endpoint 등록
@@ -239,6 +251,8 @@ Discord 사용자 /인증 입력
 1. Discord 서버에서 `/인증` 입력 → 모달 팝업 확인
 2. 링크 입력 후 제출 → "처리 중..." 메시지 확인
 3. 수 초 후 Discord에 완료 메시지 + 플랫폼/주차 정보 표시 확인
+   - `public:true`면 링크 노출
+   - `public:false`(기본값)이면 링크 비노출
 4. Google Sheets `시트1`에 행 추가 확인
 
 ### 배포 정보
