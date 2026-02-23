@@ -1,0 +1,69 @@
+{
+  "name": "콘텐츠 설계자 챌린지 - 주간 정산 워크플로우",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "weeks", "triggerAtDay": [0], "triggerAtHour": 23, "triggerAtMinute": 0 }]
+        }
+      },
+      "id": "node_schedule",
+      "name": "매주 일요일 23:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": { "__rl": true, "value": "={{$env.GOOGLE_SHEET_ID}}", "mode": "id" },
+        "sheetName": { "__rl": true, "value": "Challenge_Log", "mode": "name" },
+        "options": {}
+      },
+      "id": "node_read_sheets",
+      "name": "이번 주 데이터 읽기",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [460, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": { "id": "REPLACE_WITH_CREDENTIAL_ID", "name": "Google Sheets" }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const allRows = $input.all();\nconst now = new Date();\nconst weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);\n\n// 이번 주 데이터 필터링\nconst thisWeekRows = allRows.filter(item => {\n  const rowDate = new Date(item.json['날짜 (Date)']);\n  return rowDate >= weekAgo && rowDate <= now;\n});\n\n// 참여자별 집계\nconst stats = {};\nthisWeekRows.forEach(item => {\n  const name = item.json['작성자 (Name)'];\n  if (!stats[name]) stats[name] = { count: 0, platforms: [] };\n  stats[name].count++;\n  stats[name].platforms.push(item.json['플랫폼 (Platform)']);\n});\n\n// MVP 선정\nlet mvp = { name: '', count: 0 };\nObject.entries(stats).forEach(([name, data]) => {\n  if (data.count > mvp.count) mvp = { name, count: data.count };\n});\n\n// 현재 주차 계산\nconst startDate = new Date('2026-02-23');\nconst weekNumber = Math.ceil((now - startDate) / (7 * 24 * 60 * 60 * 1000));\n\n// 메시지 생성\nconst participantList = Object.entries(stats)\n  .map(([name, data]) => `• ${name}: ${data.count}회 (${[...new Set(data.platforms)].join(', ')})`)\n  .join('\\n');\n\nconst message = `**📊 ${weekNumber}주차 챌린지 결산**\\n\\n이번 주 총 **${Object.keys(stats).length}명**이 콘텐츠 자산을 쌓았습니다!\\n\\n${participantList || '이번 주 인증자가 없습니다.'}\\n\\n🏆 **이 주의 MVP**: ${mvp.name ? mvp.name + '님 (' + mvp.count + '회 인증!)' : '해당 없음'}\\n\\n다음 주도 함께 성장해요 💪`;\n\nreturn [{ json: { message, participant_count: Object.keys(stats).length, week_number: weekNumber } }];"
+      },
+      "id": "node_calc_summary",
+      "name": "주간 통계 계산",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "content": "={{ $json.message }}",
+        "channelId": "={{$env.DISCORD_CHANNEL_ID}}"
+      },
+      "id": "node_discord_weekly",
+      "name": "Discord 주간 공지",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [900, 300],
+      "credentials": {
+        "discordApi": { "id": "REPLACE_WITH_CREDENTIAL_ID", "name": "Discord Bot" }
+      }
+    }
+  ],
+  "connections": {
+    "매주 일요일 23:00": {
+      "main": [[ { "node": "이번 주 데이터 읽기", "type": "main", "index": 0 } ]]
+    },
+    "이번 주 데이터 읽기": {
+      "main": [[ { "node": "주간 통계 계산", "type": "main", "index": 0 } ]]
+    },
+    "주간 통계 계산": {
+      "main": [[ { "node": "Discord 주간 공지", "type": "main", "index": 0 } ]]
+    }
+  },
+  "settings": { "executionOrder": "v1" }
+}

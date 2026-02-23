@@ -1,0 +1,378 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        664,
+        -160
+      ],
+      "id": "a0189ef5-d1a4-412d-babb-9fa51c1edffa",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "8lPhEKPCUTIw5arX",
+          "name": "[지지플랩]30대의삶"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "discord-interaction",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -304,
+        -368
+      ],
+      "id": "700b6fad-c907-4a29-b7d7-ecd9e9e0a4d4",
+      "name": "Webhook",
+      "webhookId": "e72cc8e3-8ba6-4dc4-87a8-590325463557"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": ""
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.body.type }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -80,
+        -368
+      ],
+      "id": "if-ping-check",
+      "name": "PING 체크"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"type\": 1}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        144,
+        -200
+      ],
+      "id": "respond-pong",
+      "name": "PONG 응답"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"type\": 5}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        144,
+        -368
+      ],
+      "id": "respond-deferred",
+      "name": "처리중 응답"
+    },
+    {
+      "parameters": {
+        "jsCode": "const interaction = $('Webhook').first().json.body;\nconst user = interaction.member.user.username;\nconst url = interaction.data.options[0].value;\nconst token = interaction.token;\nconst appId = interaction.application_id;\n\nreturn [{\n  json: {\n    username: user,\n    content: url,\n    interaction_token: token,\n    application_id: appId\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        -368
+      ],
+      "id": "extract-interaction-data",
+      "name": "데이터 추출"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=사용자: {{ $json.username }}\nURL: {{ $json.content }}\n오늘 날짜: {{ $now.format('YYYY-MM-DD') }}",
+        "options": {
+          "systemMessage": "=너는 'ggplab'의 <콘텐츠 설계자> 챌린지 매니저야.\n사용자가 보낸 URL을 보고 아래 규칙에 따라 JSON 데이터를 생성해.\n\n1. platform: URL을 보고 [LinkedIn, Instagram, Threads, YouTube, Blog] 중 하나로 분류.\n2. week_number: 2026-02-23(시작일) 대비 오늘이 몇 주차인지 계산 (7일 단위, 올림).\n3. summary: URL과 플랫폼을 보고 간단히 추정. 정확하지 않아도 됨.\n\n4. response_msg: 사용자에게 줄 친절한 칭찬 메시지.\n     - week_number와 사용자 이름을 포함할 것.\n     - 메시지 끝에 반드시 원본 URL을 그대로 포함할 것. (Discord가 자동 미리보기를 생성함)\n     - 형식 예:\n       \"✅ {name}님, {week}주차 인증 완료! 🎉\\n\\n{원본 URL}\"\n\n결과값은 반드시 JSON 포맷으로만 출력해.\n{\n  \"platform\": \"LinkedIn\",\n  \"week_number\": 1,\n  \"week_label\": \"1주차\",\n  \"summary\": \"n8n 자동화 시스템 구축 경험 공유\",\n  \"response_msg\": \"✅ jayjunglim님, 1주차 인증 완료! 🎉\\n\\nhttps://linkedin.com/...\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        592,
+        -368
+      ],
+      "id": "98c2edd0-96ba-4013-a52a-6c2f0893a50a",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.output || $input.first().json.text || '';\nconst jsonMatch = raw.match(/\\{[\\s\\S]*\\}/);\nif (!jsonMatch) throw new Error('AI 응답에서 JSON을 찾을 수 없습니다: ' + raw);\nconst parsed = JSON.parse(jsonMatch[0]);\nconst extractData = $('데이터 추출').first().json;\nreturn [{\n  json: {\n    date: new Date().toISOString().split('T')[0],\n    name: extractData.username || 'Unknown',\n    platform: parsed.platform,\n    url: extractData.content,\n    week: parsed.week_label,\n    summary: parsed.summary,\n    response_msg: parsed.response_msg,\n    interaction_token: extractData.interaction_token,\n    application_id: extractData.application_id\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        816,
+        -368
+      ],
+      "id": "724610c8-1035-43c7-b991-2817b7280dea",
+      "name": "AI 응답 파싱"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1CKyVexXErtbkAVm6I-30fh3tei6J4B9HtCjq0-fmvvU",
+          "mode": "list",
+          "cachedResultName": "log_content_challenge",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1CKyVexXErtbkAVm6I-30fh3tei6J4B9HtCjq0-fmvvU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "시트1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1CKyVexXErtbkAVm6I-30fh3tei6J4B9HtCjq0-fmvvU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "date": "={{ $json.date }}",
+            "user": "={{ $json.name }}",
+            "platfrom": "={{ $json.platform }}",
+            "link": "={{ $json.url }}",
+            "number": "={{ $json.week }}",
+            "summary": "={{ $json.summary }}",
+            "etc": "={{ $json.response_msg }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user",
+              "displayName": "user",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "platfrom",
+              "displayName": "platfrom",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "link",
+              "displayName": "link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "number",
+              "displayName": "number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "etc",
+              "displayName": "etc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1040,
+        -368
+      ],
+      "id": "3561f088-165b-4542-af54-85cdc5728554",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "2MQp9C1Zxb2dnyAq",
+          "name": "[지지플랩]30대의삶"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://discord.com/api/v10/webhooks/{{ $json.application_id }}/{{ $json.interaction_token }}/messages/@original",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"content\": {{ JSON.stringify($json.response_msg) }} }",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1264,
+        -368
+      ],
+      "id": "http-followup",
+      "name": "Discord 답변 전송"
+    }
+  ],
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "PING 체크",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PING 체크": {
+      "main": [
+        [
+          {
+            "node": "PONG 응답",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "처리중 응답",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "처리중 응답": {
+      "main": [
+        [
+          {
+            "node": "데이터 추출",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "데이터 추출": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "AI 응답 파싱",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI 응답 파싱": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Discord 답변 전송",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a3c9c522adfd6385f845232ff4cc78161b141f603e69361658584d0ff2befbeb"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "challenge": {
+    "name": "콘텐츠 설계자: First Build",
+    "start_date": "2026-02-23",
+    "end_date": "2026-05-23",
+    "total_weeks": 12,
+    "max_participants": 10
+  },
+  "platforms": [
+    "LinkedIn",
+    "Instagram",
+    "Threads",
+    "YouTube",
+    "Blog"
+  ],
+  "discord": {
+    "cert_channel_name": "챌린지-인증",
+    "weekly_summary_day": "Sunday",
+    "weekly_summary_time": "23:00"
+  },
+  "google_sheets": {
+    "sheet_name": "Challenge_Log",
+    "headers": [
+      "날짜 (Date)",
+      "작성자 (Name)",
+      "플랫폼 (Platform)",
+      "콘텐츠 링크 (URL)",
+      "회차 (Week)",
+      "콘텐츠 요약 (Summary)"
+    ]
+  },
+  "messages": {
+    "no_url_detected": "인증 링크를 포함해 주세요! 🔗\n예: https://www.linkedin.com/posts/...",
+    "cert_complete_template": "✅ {name}님, {week}주차 인증 완료! 오늘도 자산을 쌓으셨네요 🎉",
+    "weekly_summary_template": "📊 이번 주 총 {count}명이 콘텐츠 자산을 쌓았습니다!\n\n{details}\n\n다음 주도 함께 성장해요 💪"
+  }
+}

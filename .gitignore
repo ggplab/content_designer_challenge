@@ -1,0 +1,22 @@
+# OS
+.DS_Store
+
+# Secrets
+secrets/
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Supabase local env
+supabase/.env
+supabase/.env.*
+
+# Node / tooling
+node_modules/
+.npm/
+
+# Logs
+*.log
