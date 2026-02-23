@@ -372,11 +372,26 @@ Deno.serve(async (req: Request) => {
 
   // type 2: /인증 슬래시 커맨드 → 모달 표시
   if (interaction.type === 2) {
-    const isPublic = Boolean(
+    // deno-lint-ignore no-explicit-any
+    const options: any[] = interaction.data?.options ?? [];
+    // 요구 스키마: visibility = "public" | "blind"
+    // 새 스키마: /인증 blind (subcommand)
+    // 이전 스키마: mode = "public" | "blind"
+    // 구 스키마 호환: blind = true | false
+    // deno-lint-ignore no-explicit-any
+    const visibility = options.find((opt: any) => opt.name === "visibility")
+      ?.value;
+    // deno-lint-ignore no-explicit-any
+    const subcommand = options.find((opt: any) => opt.type === 1)?.name;
+    // deno-lint-ignore no-explicit-any
+    const mode = options.find((opt: any) => opt.name === "mode")?.value;
+    const isBlind =
+      visibility === "blind" ||
+      subcommand === "blind" ||
+      mode === "blind" ||
       // deno-lint-ignore no-explicit-any
-      (interaction.data?.options ?? []).find((opt: any) => opt.name === "public")
-        ?.value === true
-    );
+      options.find((opt: any) => opt.name === "blind")?.value === true;
+    const isPublic = !isBlind; // 기본값: 공개, blind=true 일 때만 비공개
     return json(buildModal(isPublic));
   }
 

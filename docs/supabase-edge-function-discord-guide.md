@@ -165,10 +165,14 @@ curl -X POST \
     "description":"콘텐츠 인증 (최대 5개 링크 입력 가능)",
     "options":[
       {
-        "type":5,
-        "name":"public",
-        "description":"인증 완료 메시지에 링크를 공개할지 여부",
-        "required":false
+        "type":3,
+        "name":"visibility",
+        "description":"blind/public 선택",
+        "required":false,
+        "choices":[
+          { "name":"public", "value":"public" },
+          { "name":"blind", "value":"blind" }
+        ]
       }
     ]
   }'
