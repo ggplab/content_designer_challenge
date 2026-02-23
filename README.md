@@ -117,3 +117,7 @@ PR에는 아래 항목을 포함해 주세요.
 ## License
 
 MIT License. 자세한 내용은 `LICENSE`를 참고하세요.
+
+## Report
+
+- 기술 작업 리포트 (2026-02-23): `docs/technical_report_2026-02-23.md`
