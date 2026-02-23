@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate JSON files
+        shell: bash
+        run: |
+          set -euo pipefail
+          json_files="$(git ls-files '*.json')"
+          if [ -z "$json_files" ]; then
+            echo "No JSON files found."
+            exit 0
+          fi
+          echo "$json_files" | while IFS= read -r file; do
+            jq empty "$file"
+            echo "OK: $file"
+          done
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Type check Supabase Edge Function
+        run: deno check supabase/functions/discord-verify/index.ts
