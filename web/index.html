@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>너만알맡 — 챌린지 대시보드</title>
+  <style>
+    :root, [data-theme="light"] {
+      --bg: #f5f5f5;
+      --card: #ffffff;
+      --border: #e0e0e0;
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #16a34a;
+      --accent2: #2563eb;
+      --empty: #e5e7eb;
+      --stat-bg: #f9fafb;
+      --skip: #d1d5db;
+    }
+    [data-theme="dark"] {
+      --bg: #0f0f0f;
+      --card: #1a1a1a;
+      --border: #2a2a2a;
+      --text: #e0e0e0;
+      --muted: #888;
+      --accent: #4ade80;
+      --accent2: #60a5fa;
+      --empty: #2a2a2a;
+      --stat-bg: #111;
+      --skip: #444;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 24px;
+      max-width: 800px;
+      margin: 0 auto;
+      transition: background .2s, color .2s;
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      line-height: 1;
+      z-index: 10;
+    }
+
+    header { text-align: center; margin-bottom: 32px; }
+    header h1 { font-size: 1.5rem; margin-bottom: 4px; }
+    header p { color: var(--muted); font-size: 0.85rem; }
+
+    .section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      transition: background .2s, border-color .2s;
+    }
+    .section h2 { font-size: 1rem; margin-bottom: 16px; color: var(--accent2); }
+
+    /* Stats */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
+    .stat-card { text-align: center; padding: 12px; background: var(--stat-bg); border-radius: 8px; }
+    .stat-card .number { font-size: 1.5rem; font-weight: bold; color: var(--accent); }
+    .stat-card .label { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+
+    /* Leaderboard */
+    .leaderboard-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; font-size: 0.9rem; }
+    .leaderboard-rank { width: 24px; text-align: center; font-weight: bold; color: var(--muted); }
+    .leaderboard-name {
+      width: 80px; white-space: nowrap; overflow: hidden;
+      text-overflow: ellipsis; flex-shrink: 0;
+    }
+    .leaderboard-grid { display: flex; gap: 3px; }
+    .week-cell {
+      width: 18px; height: 18px; border-radius: 3px;
+      background: var(--empty); transition: background .2s;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.55rem; font-weight: bold; color: #fff;
+    }
+    .week-cell.filled { background: var(--accent); }
+    .week-cell.skipped { background: var(--skip); color: var(--muted); font-size: 0.5rem; }
+    .week-cell.current { border: 1.5px solid var(--accent2); }
+    .week-cell.future { opacity: 0.4; }
+    .leaderboard-count {
+      color: var(--muted); font-size: 0.8rem;
+      margin-left: auto; white-space: nowrap;
+    }
+    .leaderboard-freq {
+      color: var(--muted); font-size: 0.65rem;
+      width: 40px; text-align: center; flex-shrink: 0;
+    }
+
+    /* Profiles */
+    .profiles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+    .profile-card { background: var(--stat-bg); border-radius: 8px; padding: 14px; transition: background .2s; }
+    .profile-name { font-weight: bold; margin-bottom: 8px; }
+    .profile-field { font-size: 0.8rem; color: var(--muted); margin-bottom: 4px; line-height: 1.4; }
+    .profile-field strong { color: var(--text); }
+    .profile-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .platform-icon { width: 20px; height: 20px; display: inline-block; vertical-align: middle; }
+    .platform-link { opacity: 1; transition: opacity .15s; }
+    .platform-link:hover { opacity: 0.7; }
+    .platform-nolink { opacity: 0.25; filter: grayscale(100%); }
+
+    /* Timeline */
+    .timeline-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.85rem;
+    }
+    .timeline-item:last-child { border-bottom: none; }
+    .timeline-date { color: var(--muted); white-space: nowrap; min-width: 80px; }
+    .timeline-summary { color: var(--muted); font-style: italic; flex: 1; }
+    .timeline-link { color: var(--accent2); text-decoration: none; white-space: nowrap; }
+    .timeline-link:hover { text-decoration: underline; }
+
+    .loading { text-align: center; color: var(--muted); padding: 40px; }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" onclick="toggleTheme()" title="라이트/다크 모드 전환">🌙</button>
+
+  <header>
+    <h1>너만알맡 챌린지</h1>
+    <p>너 만들기만하고, 알고리즘에 맡겨 — 12주 콘텐츠 챌린지</p>
+  </header>
+
+  <div class="section">
+    <h2>통계</h2>
+    <div id="stats" class="stats-grid"><div class="loading">불러오는 중...</div></div>
+  </div>
+
+  <div class="section">
+    <h2>리더보드</h2>
+    <div id="leaderboard"><div class="loading">불러오는 중...</div></div>
+  </div>
+
+  <div class="section">
+    <h2>참가자</h2>
+    <div id="profiles" class="profiles-grid"><div class="loading">불러오는 중...</div></div>
+  </div>
+
+  <div class="section">
+    <h2>최근 인증</h2>
+    <div id="timeline"><div class="loading">불러오는 중...</div></div>
+  </div>
+
+  <script>
+    // ── Theme ──
+    function toggleTheme() {
+      const html = document.documentElement;
+      const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
+      html.dataset.theme = next;
+      document.querySelector('.theme-toggle').textContent = next === 'dark' ? '☀️' : '🌙';
+      localStorage.setItem('theme', next);
+    }
+    (function() {
+      const saved = localStorage.getItem('theme');
+      if (saved) {
+        document.documentElement.dataset.theme = saved;
+        document.querySelector('.theme-toggle').textContent = saved === 'dark' ? '☀️' : '🌙';
+      }
+    })();
+
+    // ── Platform icons (brand color SVGs) ──
+    const PLATFORM_ICONS = {
+      'LinkedIn': `<svg class="platform-icon" viewBox="0 0 24 24"><path fill="#0A66C2" d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>`,
+      'Instagram': `<svg class="platform-icon" viewBox="0 0 24 24"><defs><linearGradient id="ig" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#FFDC80"/><stop offset="25%" stop-color="#F77737"/><stop offset="50%" stop-color="#E1306C"/><stop offset="75%" stop-color="#C13584"/><stop offset="100%" stop-color="#833AB4"/></linearGradient></defs><path fill="url(#ig)" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>`,
+      'Threads': `<img class="platform-icon" src="threads.webp" alt="Threads">`,
+      'YouTube': `<svg class="platform-icon" viewBox="0 0 24 24"><path fill="#FF0000" d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>`,
+      'Blog': `<svg class="platform-icon" viewBox="0 0 24 24"><path fill="#FF5722" d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 14H7v-2h5v2zm5-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>`,
+      'Brunch': `<svg class="platform-icon" viewBox="0 0 24 24"><path fill="#333" d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 14H7v-2h5v2zm5-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>`,
+      'TikTok': `<svg class="platform-icon" viewBox="0 0 24 24"><path fill="#000" d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>`,
+    };
+
+    // Platform name mapping
+    const PLATFORM_KEYS = [
+      { match: ['linkedin', '링크드인'], key: 'LinkedIn' },
+      { match: ['instagram', '인스타'], key: 'Instagram' },
+      { match: ['threads', '스레드'], key: 'Threads' },
+      { match: ['youtube', '유튜브'], key: 'YouTube' },
+      { match: ['tiktok', '틱톡'], key: 'TikTok' },
+      { match: ['brunch', '브런치'], key: 'Brunch' },
+      { match: ['blog', '블로그'], key: 'Blog' },
+    ];
+
+    function mapPlatform(name) {
+      const n = name.trim().toLowerCase();
+      for (const { match, key } of PLATFORM_KEYS) {
+        if (match.some(m => n.includes(m))) return key;
+      }
+      return 'Blog';
+    }
+
+    function platformIconHtml(name) {
+      const key = mapPlatform(name);
+      return `<span title="${name.trim()}">${PLATFORM_ICONS[key]}</span>`;
+    }
+
+    // Survey platform link column mapping (gviz column indices)
+    // 9:링크드인, 10:인스타그램, 11:스레드, 12:유튜브, 13:블로그, 14:틱톡, 15:브런치
+    const SURVEY_LINK_COLS = [
+      { col: 9, platform: '링크드인', key: 'LinkedIn' },
+      { col: 10, platform: '인스타그램', key: 'Instagram' },
+      { col: 11, platform: '스레드', key: 'Threads' },
+      { col: 12, platform: '유튜브', key: 'YouTube' },
+      { col: 13, platform: '블로그', key: 'Blog' },
+      { col: 14, platform: '틱톡', key: 'TikTok' },
+      { col: 15, platform: '브런치', key: 'Brunch' },
+    ];
+
+    // ── Discord nickname → real name mapping ──
+    const NICKNAME_MAP = {
+      'soobing': '박수빈',
+      'Nami': '남희정',
+      'chioh': '송치오',
+      '정수': '지정수',
+      '희은': '김희은',
+      'lizzie': '정윤영',
+      'Hailey 박정현': '박정현',
+    };
+    function toRealName(name) {
+      return NICKNAME_MAP[name] || name;
+    }
+
+    // ── Config ──
+    const SHEET_ID = '1CKyVexXErtbkAVm6I-30fh3tei6J4B9HtCjq0-fmvvU';
+    const SURVEY_SHEET_ID = '18ye_Jyna8OVtsRYpweh706cn3AhbbfScl8h9VxF-R9M';
+    const SURVEY_GID = '864037745';
+    const TOTAL_WEEKS = 12;
+    const CHALLENGE_START = new Date('2026-03-02T00:00:00+09:00');
+
+    // All participants with their frequency
+    const ALL_PARTICIPANTS = [
+      { name: '신지혜', freq: '주1회' },
+      { name: '서영학', freq: '주1회' },
+      { name: '박수빈', freq: '2주1회' },
+      { name: '송치오', freq: '주1회' },
+      { name: '남희정', freq: '주1회' },
+      { name: '신예린', freq: '2주1회' },
+      { name: '김한솔', freq: '주1회' },
+      { name: '박정현', freq: '2주1회' },
+      { name: '정윤영', freq: '주1회' },
+      { name: '임정', freq: '주1회' },
+      { name: '강예정', freq: '주1회' },
+      { name: '김희은', freq: '2주1회' },
+      { name: '지정수', freq: '주1회' },
+    ];
+
+    function getCurrentWeek() {
+      const now = new Date();
+      const days = Math.floor((now - CHALLENGE_START) / 86400000);
+      if (days < 0) return 0;
+      return Math.max(1, Math.ceil((days + 1) / 7));
+    }
+
+    function getWeekRange(week) {
+      if (week <= 0) return '준비기간';
+      const start = new Date(CHALLENGE_START);
+      start.setDate(start.getDate() + (week - 1) * 7);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 6);
+      const fmt = d => `${d.getMonth() + 1}/${d.getDate()}`;
+      return `${fmt(start)} ~ ${fmt(end)}`;
+    }
+
+    function parseGvizDate(val) {
+      if (typeof val === 'string' && val.startsWith('Date(')) {
+        const parts = val.replace('Date(', '').replace(')', '').split(',');
+        const y = parts[0];
+        const m = String(Number(parts[1]) + 1).padStart(2, '0');
+        const d = String(Number(parts[2])).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      }
+      if (typeof val === 'string') return val;
+      return '';
+    }
+
+    async function fetchSheetData() {
+      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+      const resp = await fetch(url);
+      const text = await resp.text();
+      const json = JSON.parse(text.match(/\{.*\}/s)[0]);
+      return json.table.rows.map(row => {
+        const c = row.c;
+        return {
+          date: parseGvizDate(c[0]?.v ?? ''),
+          user: toRealName(c[1]?.v ?? ''),
+          platform: c[2]?.v ?? '',
+          link: c[3]?.v ?? '',
+          number: c[4]?.v ?? '',
+          summary: c[5]?.v ?? '',
+          visibility: c[6]?.v ?? 'public',
+        };
+      }).filter(d => !d.number.includes('준비기간'));
+    }
+
+    async function fetchSurveyData() {
+      const url = `https://docs.google.com/spreadsheets/d/${SURVEY_SHEET_ID}/gviz/tq?tqx=out:json&gid=${SURVEY_GID}`;
+      const resp = await fetch(url);
+      const text = await resp.text();
+      const json = JSON.parse(text.match(/\{.*\}/s)[0]);
+      return json.table.rows.map(row => {
+        const c = row.c;
+        const links = {};
+        for (const { col, key } of SURVEY_LINK_COLS) {
+          const v = c[col]?.v ?? '';
+          if (v && v.startsWith('http')) links[key] = v;
+        }
+        return {
+          name: c[1]?.v ?? '',
+          topic: c[2]?.v ?? '',
+          platforms: c[3]?.v ?? '',
+          frequency: c[4]?.v ?? '',
+          goal: c[5]?.v ?? '',
+          kpi: c[6]?.v ?? '',
+          links,
+        };
+      });
+    }
+
+    function renderStats(data) {
+      const el = document.getElementById('stats');
+      const currentWeek = getCurrentWeek();
+      const platforms = {};
+      data.forEach(d => { platforms[d.platform] = (platforms[d.platform] || 0) + 1; });
+      const topPlatform = Object.entries(platforms).sort((a, b) => b[1] - a[1])[0];
+      el.innerHTML = `
+        <div class="stat-card"><div class="number">13</div><div class="label">참가자</div></div>
+        <div class="stat-card"><div class="number">${data.length}</div><div class="label">총 인증</div></div>
+        <div class="stat-card"><div class="number">${currentWeek > 0 ? currentWeek + '주차' : '준비기간'}</div><div class="label">${getWeekRange(currentWeek)}</div></div>
+        <div class="stat-card"><div class="number">${topPlatform ? topPlatform[0] : '-'}</div><div class="label">인기 플랫폼</div></div>
+      `;
+    }
+
+    function renderLeaderboard(data) {
+      const el = document.getElementById('leaderboard');
+      const currentWeek = getCurrentWeek();
+
+      // Build submission data from sheet
+      const userWeeks = {};
+      data.forEach(d => {
+        if (!userWeeks[d.user]) userWeeks[d.user] = {};
+        const match = (d.number || '').match(/(\d+)주차/);
+        if (match) {
+          const w = parseInt(match[1]);
+          userWeeks[d.user][w] = (userWeeks[d.user][w] || 0) + 1;
+        }
+      });
+
+      // Build rows for ALL participants
+      const rows = ALL_PARTICIPANTS.map(p => {
+        const weekCounts = userWeeks[p.name] || {};
+        const weeksActive = Object.keys(weekCounts).length;
+        const total = Object.values(weekCounts).reduce((a, b) => a + b, 0);
+        return { name: p.name, freq: p.freq, weekCounts, weeksActive, total };
+      });
+
+      // Sort by weeks active desc, then total desc
+      rows.sort((a, b) => b.weeksActive - a.weeksActive || b.total - a.total);
+
+      // 격주 제출자: 홀수 주차에 X 미리 표기
+      const BIWEEKLY_MEMBERS = ['박수빈', '신예린', '김희은'];
+
+      el.innerHTML = rows.map((r, i) => {
+        const isBiweekly = BIWEEKLY_MEMBERS.includes(r.name);
+
+        const cells = Array.from({ length: TOTAL_WEEKS }, (_, w) => {
+          const weekNum = w + 1;
+          const count = r.weekCounts[weekNum] || 0;
+          const isCurrent = weekNum === currentWeek;
+          const isFuture = weekNum > currentWeek;
+
+          // 제출한 주차
+          if (count > 0) {
+            const label = count > 1 ? count : '';
+            return `<div class="week-cell filled${isCurrent ? ' current' : ''}" title="${weekNum}주차: ${count}건">${label}</div>`;
+          }
+
+          // 격주 제출자의 홀수 주차 = 제출 안 해도 되는 주 (미래 포함)
+          if (isBiweekly && weekNum % 2 === 1) {
+            return `<div class="week-cell skipped${isCurrent ? ' current' : ''}" title="${weekNum}주차: 격주 스킵">X</div>`;
+          }
+
+          // 미래 주차
+          if (isFuture) {
+            return `<div class="week-cell future${isCurrent ? ' current' : ''}" title="${weekNum}주차"></div>`;
+          }
+
+          // 과거 미제출 = 빈 회색 칸
+          return `<div class="week-cell${isCurrent ? ' current' : ''}" title="${weekNum}주차: 미제출"></div>`;
+        }).join('');
+
+        return `
+          <div class="leaderboard-row">
+            <span class="leaderboard-rank">${i + 1}</span>
+            <span class="leaderboard-name">${r.name}</span>
+            <span class="leaderboard-freq">${r.freq}</span>
+            <div class="leaderboard-grid">${cells}</div>
+            <span class="leaderboard-count">${r.weeksActive}주 / ${r.total}건</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderProfiles(surveyData) {
+      const el = document.getElementById('profiles');
+      el.innerHTML = surveyData.map(p => {
+        const tags = p.platforms.split(/[,、]/).map(t => t.trim()).filter(Boolean);
+        const topicShort = p.topic.length > 60 ? p.topic.slice(0, 60) + '...' : p.topic;
+        const tagHtml = tags.map(t => {
+          const key = mapPlatform(t);
+          const link = p.links[key];
+          if (link) {
+            return `<a href="${link}" target="_blank" rel="noopener" class="platform-link" title="${t}: ${link}">${PLATFORM_ICONS[key]}</a>`;
+          }
+          return `<span class="platform-nolink" title="${t} (링크 미등록)">${PLATFORM_ICONS[key]}</span>`;
+        }).join('');
+
+        return `
+          <div class="profile-card">
+            <div class="profile-name">${p.name}</div>
+            <div class="profile-field">${topicShort}</div>
+            <div class="profile-field"><strong>${p.frequency}</strong> · ${p.kpi}</div>
+            <div class="profile-tags">${tagHtml}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderTimeline(data) {
+      const el = document.getElementById('timeline');
+      const recent = data.slice(-20).reverse();
+      el.innerHTML = recent.map(d => {
+        const isPrivate = d.visibility === 'private';
+        const icon = platformIconHtml(d.platform);
+        const linkHtml = isPrivate
+          ? ''
+          : d.link ? `<a class="timeline-link" href="${d.link}" target="_blank" rel="noopener">링크</a>` : '';
+        return `
+          <div class="timeline-item">
+            <span class="timeline-date">${d.date}</span>
+            ${icon}
+            <span class="leaderboard-name">${d.user}</span>
+            <span class="timeline-summary">"${d.summary}"</span>
+            ${linkHtml}
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function init() {
+      try {
+        const [rows, survey] = await Promise.all([fetchSheetData(), fetchSurveyData()]);
+        renderStats(rows);
+        renderLeaderboard(rows);
+        renderProfiles(survey);
+        renderTimeline(rows);
+      } catch (e) {
+        console.error('데이터 로딩 실패:', e);
+        document.querySelectorAll('.loading').forEach(el => {
+          el.textContent = '데이터를 불러올 수 없습니다. 시트가 웹에 게시되어 있는지 확인해주세요.';
+        });
+      }
+    }
+    init();
+  </script>
+</body>
+</html>

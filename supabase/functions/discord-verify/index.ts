@@ -76,25 +76,23 @@ function detectPlatform(url: string): string {
   return "Blog";
 }
 
-// ── Gemini 요약 ───────────────────────────────────────────────────────────────
+// ── Gemini 요약 (google_search 도구로 URL 내용 직접 확인) ─────────────────────
 
 async function callGemini(url: string, platform: string): Promise<string> {
-  const prompt = `당신은 콘텐츠 챌린지 인증 도우미입니다.
-아래 URL은 ${platform} 플랫폼의 콘텐츠입니다.
-URL 경로와 슬러그를 분석하여 어떤 주제의 글/영상인지 한국어로 20자 이내로 추측해 주세요.
-추측이 불가능하면 "${platform} 콘텐츠"라고 답하세요.
+  const prompt = `아래 URL의 콘텐츠 제목/주제를 확인하고, 한국어로 15자 이내로 요약해 주세요.
 반드시 {"summary":"..."} JSON만 반환하세요.
 
 URL: ${url}`;
 
   try {
     const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
+          tools: [{ google_search: {} }],
           generationConfig: { temperature: 0.1, maxOutputTokens: 100 },
         }),
       }
@@ -106,14 +104,17 @@ URL: ${url}`;
     }
 
     const data = await resp.json();
-    const text: string =
-      data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-    const match = text.match(/\{[\s\S]*?\}/);
+    // google_search 사용 시 응답에 여러 parts가 올 수 있음 — 텍스트 part 찾기
+    const parts = data.candidates?.[0]?.content?.parts ?? [];
+    const textPart = parts.find((p: { text?: string }) => p.text)?.text ?? "";
+    const match = textPart.match(/\{[\s\S]*?\}/);
     if (match) {
       const parsed = JSON.parse(match[0]);
-      return parsed.summary ?? `${platform} 콘텐츠`;
+      if (parsed.summary) return parsed.summary;
     }
-    return text.slice(0, 20) || `${platform} 콘텐츠`;
+    // JSON 파싱 실패 시 텍스트에서 직접 추출
+    if (textPart.length > 0) return textPart.slice(0, 20);
+    return `${platform} 콘텐츠`;
   } catch (e) {
     console.error("Gemini error:", e);
     return `${platform} 콘텐츠`;
@@ -204,6 +205,30 @@ async function appendToSheets(
   }
 }
 
+// ── Google Sheets에서 주차별 제출 횟수 조회 ──────────────────────────────────
+
+async function countWeekSubmissions(
+  accessToken: string,
+  displayName: string,
+  weekLabel: string
+): Promise<number> {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEET_ID}/values/%EC%8B%9C%ED%8A%B81!B:E`;
+  const resp = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!resp.ok) {
+    console.error("Sheets 조회 실패:", resp.status);
+    return 0;
+  }
+  const data = await resp.json();
+  const rows: string[][] = data.values ?? [];
+  // 컬럼: B=user, C=platfrom, D=link, E=number
+  // number 컬럼에서 해당 유저 + 같은 주차 매칭
+  return rows.filter(
+    (row) => row[0] === displayName && (row[3] ?? "").startsWith(weekLabel)
+  ).length;
+}
+
 // ── Discord follow-up 메시지 ──────────────────────────────────────────────────
 
 async function sendFollowup(token: string, content: string): Promise<void> {
@@ -252,11 +277,16 @@ async function processVerification(
     return;
   }
 
-  const results: { platform: string; url: string }[] = [];
+  // 기존 제출 횟수 조회
+  let existingCount = await countWeekSubmissions(accessToken, displayName, weekLabel);
+
+  const results: { platform: string; url: string; summary: string }[] = [];
 
   for (const url of links) {
     const platform = detectPlatform(url);
     const summary = await callGemini(url, platform);
+    existingCount++;
+    const numberLabel = `${weekLabel}-${existingCount}회`;
 
     try {
       // 컬럼: date | user | platfrom(오타유지) | link | number | summary | etc
@@ -265,11 +295,11 @@ async function processVerification(
         displayName,
         platform,
         url,
-        weekLabel,
+        numberLabel,
         summary,
         isPublic ? "public" : "private",
       ]);
-      results.push({ platform, url });
+      results.push({ platform, url, summary });
       console.log(`✅ Sheets 저장: ${platform} — ${url}`);
     } catch (e) {
       console.error(`Sheets 저장 실패 (${url}):`, e);
@@ -285,20 +315,14 @@ async function processVerification(
   let msg = `✅ ${displayName}님, ${weekLabel} 인증 완료! 🎉\n\n`;
   if (!isPublic) {
     msg += "🔒 링크 비공개로 저장했습니다.\n";
-    if (results.length === 1) {
-      msg += `📌 ${results[0].platform} 1건 등록`;
-    } else {
-      msg += `📌 ${results.length}개 플랫폼 등록:\n`;
-      for (const { platform } of results) {
-        msg += `• ${platform}\n`;
-      }
+    for (const { platform, summary } of results) {
+      msg += `• ${platform} · "${summary}"\n`;
     }
   } else if (results.length === 1) {
-    msg += `📌 ${results[0].platform}\n${results[0].url}`;
+    msg += `📌 ${results[0].platform} · "${results[0].summary}"\n${results[0].url}`;
   } else {
-    msg += `📌 ${results.length}개 플랫폼 등록:\n`;
-    for (const { platform, url } of results) {
-      msg += `• ${platform} — ${url}\n`;
+    for (const { platform, url, summary } of results) {
+      msg += `• ${platform} · "${summary}"\n  ${url}\n`;
     }
   }
 
