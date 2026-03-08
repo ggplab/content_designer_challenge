@@ -219,16 +219,8 @@
       { col: 15, platform: '브런치', key: 'Brunch' },
     ];
 
-    // ── Discord nickname → real name mapping ──
-    const NICKNAME_MAP = {
-      'soobing': '박수빈',
-      'Nami': '남희정',
-      'chioh': '송치오',
-      '정수': '지정수',
-      '희은': '김희은',
-      'lizzie': '정윤영',
-      'Hailey 박정현': '박정현',
-    };
+    // ── Discord nickname → real name mapping (loaded from members.json) ──
+    let NICKNAME_MAP = {};
     function toRealName(name) {
       return NICKNAME_MAP[name] || name;
     }
@@ -240,22 +232,15 @@
     const TOTAL_WEEKS = 12;
     const CHALLENGE_START = new Date('2026-03-02T00:00:00+09:00');
 
-    // All participants with their frequency
-    const ALL_PARTICIPANTS = [
-      { name: '신지혜', freq: '주1회' },
-      { name: '서영학', freq: '주1회' },
-      { name: '박수빈', freq: '2주1회' },
-      { name: '송치오', freq: '주1회' },
-      { name: '남희정', freq: '주1회' },
-      { name: '신예린', freq: '2주1회' },
-      { name: '김한솔', freq: '주1회' },
-      { name: '박정현', freq: '2주1회' },
-      { name: '정윤영', freq: '주1회' },
-      { name: '임정', freq: '주1회' },
-      { name: '강예정', freq: '주1회' },
-      { name: '김희은', freq: '2주1회' },
-      { name: '지정수', freq: '주1회' },
-    ];
+    // Loaded dynamically from members.json
+    let ALL_PARTICIPANTS = [];
+
+    async function fetchMembers() {
+      const resp = await fetch('./members.json');
+      const data = await resp.json();
+      ALL_PARTICIPANTS = data.participants;
+      NICKNAME_MAP = data.nickname_map;
+    }
 
     function getCurrentWeek() {
       const now = new Date();
@@ -336,7 +321,7 @@
       data.forEach(d => { platforms[d.platform] = (platforms[d.platform] || 0) + 1; });
       const topPlatform = Object.entries(platforms).sort((a, b) => b[1] - a[1])[0];
       el.innerHTML = `
-        <div class="stat-card"><div class="number">13</div><div class="label">참가자</div></div>
+        <div class="stat-card"><div class="number">${ALL_PARTICIPANTS.length}</div><div class="label">참가자</div></div>
         <div class="stat-card"><div class="number">${data.length}</div><div class="label">총 인증</div></div>
         <div class="stat-card"><div class="number">${currentWeek > 0 ? currentWeek + '주차' : '준비기간'}</div><div class="label">${getWeekRange(currentWeek)}</div></div>
         <div class="stat-card"><div class="number">${topPlatform ? topPlatform[0] : '-'}</div><div class="label">인기 플랫폼</div></div>
@@ -370,7 +355,7 @@
       rows.sort((a, b) => b.weeksActive - a.weeksActive || b.total - a.total);
 
       // 격주 제출자: 홀수 주차에 X 미리 표기
-      const BIWEEKLY_MEMBERS = ['박수빈', '신예린', '김희은'];
+      const BIWEEKLY_MEMBERS = ALL_PARTICIPANTS.filter(p => p.freq === '2주1회').map(p => p.name);
 
       el.innerHTML = rows.map((r, i) => {
         const isBiweekly = BIWEEKLY_MEMBERS.includes(r.name);
@@ -461,6 +446,7 @@
 
     async function init() {
       try {
+        await fetchMembers();
         const [rows, survey] = await Promise.all([fetchSheetData(), fetchSurveyData()]);
         renderStats(rows);
         renderLeaderboard(rows);

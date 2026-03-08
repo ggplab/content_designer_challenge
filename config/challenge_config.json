@@ -6,6 +6,22 @@
     "total_weeks": 12,
     "max_participants": 10
   },
+  "participants": [
+    { "name": "신지혜", "freq": "주1회" },
+    { "name": "서영학", "freq": "주1회" },
+    { "name": "박수빈", "freq": "2주1회" },
+    { "name": "송치오", "freq": "주1회" },
+    { "name": "남희정", "freq": "주1회" },
+    { "name": "신예린", "freq": "2주1회" },
+    { "name": "김한솔", "freq": "주1회" },
+    { "name": "박정현", "freq": "2주1회" },
+    { "name": "정윤영", "freq": "주1회" },
+    { "name": "임정", "freq": "주1회" },
+    { "name": "강예정", "freq": "주1회" },
+    { "name": "김희은", "freq": "2주1회" },
+    { "name": "지정수", "freq": "주1회" },
+    { "name": "이인영", "freq": "주1회", "nickname": "팝콘" }
+  ],
   "platforms": [
     "LinkedIn",
     "Instagram",
