@@ -408,28 +408,33 @@
 
       // 설문 작성 멤버 카드
       const surveyCards = surveyData.map(p => {
-        const mergedLinks = { ...MEMBER_LINKS[p.name], ...p.links };
-        const surveyKeys = new Set(
-          p.platforms.split(/[,、]/).map(t => mapPlatform(t.trim())).filter(Boolean)
-        );
-        // members.json 링크 키도 포함 (설문에 없는 플랫폼 추가)
-        Object.keys(mergedLinks).forEach(k => surveyKeys.add(k));
+        const memberLinks = MEMBER_LINKS[p.name] || {};
+        const mergedLinks = { ...memberLinks, ...p.links };
+        const surveyTags = p.platforms.split(/[,、]/).map(t => t.trim()).filter(Boolean);
+        const surveyKeys = new Set(surveyTags.map(t => mapPlatform(t)));
 
         const topicShort = p.topic.length > 60 ? p.topic.slice(0, 60) + '...' : p.topic;
-        const tagHtml = [...surveyKeys].map(key => {
+
+        // 설문 플랫폼 아이콘
+        const surveyTagHtml = surveyTags.map(t => {
+          const key = mapPlatform(t);
           const link = mergedLinks[key];
-          if (link) {
-            return `<a href="${link}" target="_blank" rel="noopener" class="platform-link" title="${key}">${PLATFORM_ICONS[key] || key}</a>`;
-          }
-          return `<span class="platform-nolink" title="${key} (링크 미등록)">${PLATFORM_ICONS[key] || key}</span>`;
+          if (link) return `<a href="${link}" target="_blank" rel="noopener" class="platform-link" title="${t}">${PLATFORM_ICONS[key] || key}</a>`;
+          return `<span class="platform-nolink" title="${t} (링크 미등록)">${PLATFORM_ICONS[key] || key}</span>`;
         }).join('');
+
+        // members.json에만 있는 추가 링크 아이콘 (설문에 없는 플랫폼)
+        const extraTagHtml = Object.entries(memberLinks)
+          .filter(([key]) => !surveyKeys.has(key))
+          .map(([key, link]) => `<a href="${link}" target="_blank" rel="noopener" class="platform-link" title="${key}">${PLATFORM_ICONS[key] || key}</a>`)
+          .join('');
 
         return `
           <div class="profile-card">
             <div class="profile-name">${p.name}</div>
             <div class="profile-field">${topicShort}</div>
             <div class="profile-field"><strong>${p.frequency}</strong> · ${p.kpi}</div>
-            <div class="profile-tags">${tagHtml}</div>
+            <div class="profile-tags">${surveyTagHtml}${extraTagHtml}</div>
           </div>
         `;
       });
