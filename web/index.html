@@ -409,15 +409,19 @@
       // 설문 작성 멤버 카드
       const surveyCards = surveyData.map(p => {
         const mergedLinks = { ...MEMBER_LINKS[p.name], ...p.links };
-        const tags = p.platforms.split(/[,、]/).map(t => t.trim()).filter(Boolean);
+        const surveyKeys = new Set(
+          p.platforms.split(/[,、]/).map(t => mapPlatform(t.trim())).filter(Boolean)
+        );
+        // members.json 링크 키도 포함 (설문에 없는 플랫폼 추가)
+        Object.keys(mergedLinks).forEach(k => surveyKeys.add(k));
+
         const topicShort = p.topic.length > 60 ? p.topic.slice(0, 60) + '...' : p.topic;
-        const tagHtml = tags.map(t => {
-          const key = mapPlatform(t);
+        const tagHtml = [...surveyKeys].map(key => {
           const link = mergedLinks[key];
           if (link) {
-            return `<a href="${link}" target="_blank" rel="noopener" class="platform-link" title="${t}: ${link}">${PLATFORM_ICONS[key]}</a>`;
+            return `<a href="${link}" target="_blank" rel="noopener" class="platform-link" title="${key}">${PLATFORM_ICONS[key] || key}</a>`;
           }
-          return `<span class="platform-nolink" title="${t} (링크 미등록)">${PLATFORM_ICONS[key]}</span>`;
+          return `<span class="platform-nolink" title="${key} (링크 미등록)">${PLATFORM_ICONS[key] || key}</span>`;
         }).join('');
 
         return `
