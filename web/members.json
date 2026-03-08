@@ -13,7 +13,7 @@
     { "name": "강예정", "freq": "2주1회" },
     { "name": "김희은", "freq": "2주1회" },
     { "name": "지정수", "freq": "주1회" },
-    { "name": "이인영", "freq": "주1회" }
+    { "name": "이인영", "freq": "주1회", "links": { "LinkedIn": "https://www.linkedin.com/in/2innnnn0/" } }
   ],
   "nickname_map": {
     "soobing": "박수빈",

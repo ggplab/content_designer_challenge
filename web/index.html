@@ -234,12 +234,16 @@
 
     // Loaded dynamically from members.json
     let ALL_PARTICIPANTS = [];
+    let MEMBER_LINKS = {}; // name → { LinkedIn: url, ... }
 
     async function fetchMembers() {
       const resp = await fetch('./members.json');
       const data = await resp.json();
       ALL_PARTICIPANTS = data.participants;
       NICKNAME_MAP = data.nickname_map;
+      for (const p of data.participants) {
+        if (p.links) MEMBER_LINKS[p.name] = p.links;
+      }
     }
 
     function getCurrentWeek() {
@@ -400,12 +404,16 @@
 
     function renderProfiles(surveyData) {
       const el = document.getElementById('profiles');
-      el.innerHTML = surveyData.map(p => {
+      const surveyNames = new Set(surveyData.map(p => p.name));
+
+      // 설문 작성 멤버 카드
+      const surveyCards = surveyData.map(p => {
+        const mergedLinks = { ...MEMBER_LINKS[p.name], ...p.links };
         const tags = p.platforms.split(/[,、]/).map(t => t.trim()).filter(Boolean);
         const topicShort = p.topic.length > 60 ? p.topic.slice(0, 60) + '...' : p.topic;
         const tagHtml = tags.map(t => {
           const key = mapPlatform(t);
-          const link = p.links[key];
+          const link = mergedLinks[key];
           if (link) {
             return `<a href="${link}" target="_blank" rel="noopener" class="platform-link" title="${t}: ${link}">${PLATFORM_ICONS[key]}</a>`;
           }
@@ -420,7 +428,24 @@
             <div class="profile-tags">${tagHtml}</div>
           </div>
         `;
-      }).join('');
+      });
+
+      // 설문 미작성이지만 members.json에 링크가 있는 멤버 카드
+      const extraCards = ALL_PARTICIPANTS
+        .filter(p => !surveyNames.has(p.name) && MEMBER_LINKS[p.name])
+        .map(p => {
+          const tagHtml = Object.entries(MEMBER_LINKS[p.name]).map(([key, link]) =>
+            `<a href="${link}" target="_blank" rel="noopener" class="platform-link" title="${key}">${PLATFORM_ICONS[key] || key}</a>`
+          ).join('');
+          return `
+            <div class="profile-card">
+              <div class="profile-name">${p.name}</div>
+              <div class="profile-tags">${tagHtml}</div>
+            </div>
+          `;
+        });
+
+      el.innerHTML = [...surveyCards, ...extraCards].join('');
     }
 
     function renderTimeline(data) {
