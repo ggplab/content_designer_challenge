@@ -1,0 +1,46 @@
+# 업데이트 내역
+
+---
+
+## 2026-03-09
+
+### 멤버 관리 중앙화
+- `web/members.json` 신규 생성 — 참가자 목록, 닉네임맵, 링크를 단일 파일로 관리
+- `web/index.html` 하드코딩 제거 → `members.json` 동적 fetch로 교체
+  - `ALL_PARTICIPANTS`, `BIWEEKLY_MEMBERS`, `NICKNAME_MAP` 모두 config 기반으로 전환
+  - 격주 멤버는 `freq: "2주1회"` 로 자동 분류
+- `config/challenge_config.json` participants 배열 추가 (백엔드 참고용)
+
+### 멤버 변경사항
+- 이인영 (팝콘) 신규 추가 — 주1회, LinkedIn: https://www.linkedin.com/in/2innnnn0/
+- 강예정 인증 빈도 변경 — 주1회 → 2주1회
+- 신지혜 브런치 링크 추가 — https://brunch.co.kr/@smol
+- 박수빈 블로그 링크 추가 — https://soobing.github.io/posts/
+
+### URL 요약 로직 개선 (Edge Function)
+- 기존: Gemini `google_search` 도구 사용 → JSON 파싱 불안정, 소셜 플랫폼 접근 불가
+- 변경: OG 태그 파싱 1순위 (Discord 미리보기와 동일 방식)
+  - Discordbot User-Agent로 fetch → `og:title` / `twitter:title` / `<title>` 순으로 파싱
+  - 5초 타임아웃, head 섹션(50KB)만 읽어 성능 최적화
+- 실패 시 Gemini fallback — `google_search` 제거, `responseMimeType: "application/json"` 구조화 출력
+
+### 브런치 아이콘 교체
+- 기존: 블로그와 동일한 SVG
+- 변경: 실제 브런치 로고 (검정 사각형 + 흰색 b 마크)
+
+### 프로필 카드 개선
+- `members.json`에 링크가 있으면 설문 플랫폼 목록에 없어도 아이콘 자동 표시
+- 설문 미작성 멤버도 `members.json` 링크가 있으면 카드 표시
+
+---
+
+## 2026-03-08
+
+### 웹사이트 최초 기능 목록
+- 챌린지 통계 대시보드 (참가자 수, 총 인증 수, 현재 주차, 인기 플랫폼)
+- 리더보드 — 참가자별 주차 그리드, 격주 스킵/미제출/미래 주차 구분 표시
+- 참가자 프로필 카드 — 주제, 발행 주기, KPI, 플랫폼 링크
+- 최근 인증 타임라인 — 비공개 인증 링크 비노출 처리
+- Google Sheets gviz 실시간 연동
+- 라이트/다크 모드 (localStorage 유지)
+- 반응형 UI
