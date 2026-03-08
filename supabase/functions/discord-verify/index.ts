@@ -76,12 +76,77 @@ function detectPlatform(url: string): string {
   return "Blog";
 }
 
-// ── Gemini 요약 (google_search 도구로 URL 내용 직접 확인) ─────────────────────
+// ── OG 태그 파싱 (Discord 미리보기와 동일한 데이터 소스) ────────────────────
+
+function parseMetaContent(html: string, property: string): string | null {
+  const patterns = [
+    new RegExp(`<meta[^>]+property=["']${property}["'][^>]+content=["']([^"'\\r\\n]+)["']`, "i"),
+    new RegExp(`<meta[^>]+content=["']([^"'\\r\\n]+)["'][^>]+property=["']${property}["']`, "i"),
+  ];
+  for (const re of patterns) {
+    const m = html.match(re);
+    if (m?.[1]) {
+      return m[1].trim()
+        .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, " ");
+    }
+  }
+  return null;
+}
+
+async function fetchOGSummary(url: string): Promise<string | null> {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5000);
+
+    const resp = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)",
+        "Accept": "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
+      },
+      redirect: "follow",
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+
+    if (!resp.ok) {
+      console.log(`[og] fetch 실패 (${resp.status}): ${url}`);
+      return null;
+    }
+
+    // head 섹션만 읽기 (최대 50KB)
+    const reader = resp.body?.getReader();
+    if (!reader) return null;
+    let html = "";
+    while (html.length < 50000) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      html += new TextDecoder().decode(value);
+      if (html.includes("</head>")) break;
+    }
+    reader.cancel().catch(() => {});
+
+    const title =
+      parseMetaContent(html, "og:title") ||
+      parseMetaContent(html, "twitter:title") ||
+      html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1]?.trim() ||
+      null;
+
+    if (title) {
+      console.log(`[og] 파싱 성공: "${title}" (${url})`);
+      return title.slice(0, 40);
+    }
+    return null;
+  } catch (e) {
+    console.log(`[og] fetch 오류 (${url}):`, e);
+    return null;
+  }
+}
+
+// ── Gemini 요약 (OG 파싱 실패 시 fallback) ───────────────────────────────────
 
 async function callGemini(url: string, platform: string): Promise<string> {
-  const prompt = `아래 URL의 콘텐츠 제목/주제를 확인하고, 한국어로 15자 이내로 요약해 주세요.
-반드시 {"summary":"..."} JSON만 반환하세요.
-
+  const prompt = `다음 ${platform} URL을 보고 어떤 주제의 콘텐츠인지 한국어로 15자 이내로 요약해주세요.
 URL: ${url}`;
 
   try {
@@ -92,29 +157,29 @@ URL: ${url}`;
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          tools: [{ google_search: {} }],
-          generationConfig: { temperature: 0.1, maxOutputTokens: 100 },
+          generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: 50,
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: "OBJECT",
+              properties: { summary: { type: "STRING" } },
+              required: ["summary"],
+            },
+          },
         }),
       }
     );
 
     if (!resp.ok) {
-      console.error("Gemini HTTP error:", resp.status);
+      console.error("Gemini HTTP error:", resp.status, await resp.text());
       return `${platform} 콘텐츠`;
     }
 
     const data = await resp.json();
-    // google_search 사용 시 응답에 여러 parts가 올 수 있음 — 텍스트 part 찾기
-    const parts = data.candidates?.[0]?.content?.parts ?? [];
-    const textPart = parts.find((p: { text?: string }) => p.text)?.text ?? "";
-    const match = textPart.match(/\{[\s\S]*?\}/);
-    if (match) {
-      const parsed = JSON.parse(match[0]);
-      if (parsed.summary) return parsed.summary;
-    }
-    // JSON 파싱 실패 시 텍스트에서 직접 추출
-    if (textPart.length > 0) return textPart.slice(0, 20);
-    return `${platform} 콘텐츠`;
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    const parsed = JSON.parse(text);
+    return (parsed.summary as string)?.slice(0, 20) || `${platform} 콘텐츠`;
   } catch (e) {
     console.error("Gemini error:", e);
     return `${platform} 콘텐츠`;
@@ -284,7 +349,8 @@ async function processVerification(
 
   for (const url of links) {
     const platform = detectPlatform(url);
-    const summary = await callGemini(url, platform);
+    const ogSummary = await fetchOGSummary(url);
+    const summary = ogSummary ?? await callGemini(url, platform);
     existingCount++;
     const numberLabel = `${weekLabel}-${existingCount}회`;
 
