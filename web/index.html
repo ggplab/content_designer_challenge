@@ -294,8 +294,8 @@
         } else {
           const lines = [`✅ ${name}님, ${data.weekLabel} 인증 완료!`];
           if (!isPublic) {
-            lines.push('🔒 링크 비공개로 저장했습니다.');
-            for (const r of data.results) lines.push(`• ${r.platform} · "${r.summary}"`);
+            lines.push('🔒 비공개로 인증했습니다.');
+            for (const r of data.results) lines.push(`• ${r.platform}`);
           } else if (data.results.length === 1) {
             const r = data.results[0];
             lines.push(`📌 ${r.platform} · "${r.summary}"`);
@@ -642,7 +642,7 @@
             <span class="timeline-date">${d.date}</span>
             ${icon}
             <span class="leaderboard-name">${d.user}</span>
-            <span class="timeline-summary">"${d.summary}"</span>
+            <span class="timeline-summary">${isPrivate ? '' : `"${d.summary}"`}</span>
             ${linkHtml}
           </div>
         `;

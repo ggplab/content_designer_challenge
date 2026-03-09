@@ -351,8 +351,10 @@ async function processVerification(
 
   for (const url of links) {
     const platform = detectPlatform(url);
-    const ogSummary = await fetchOGSummary(url);
-    const summary = ogSummary ?? await callGemini(url, platform);
+    // 비공개 제출은 요약 생략
+    const summary = isPublic
+      ? (await fetchOGSummary(url) ?? await callGemini(url, platform))
+      : "";
     existingCount++;
     const numberLabel = `${weekLabel}-${existingCount}회`;
 
@@ -382,9 +384,9 @@ async function processVerification(
   // 결과 메시지 조합
   let msg = `✅ ${displayName}님, ${weekLabel} 인증 완료! 🎉\n\n`;
   if (!isPublic) {
-    msg += "🔒 링크 비공개로 저장했습니다.\n";
-    for (const { platform, summary } of results) {
-      msg += `• ${platform} · "${summary}"\n`;
+    msg += "🔒 비공개로 인증했습니다.\n";
+    for (const { platform } of results) {
+      msg += `• ${platform}\n`;
     }
   } else if (results.length === 1) {
     msg += `📌 ${results[0].platform} · "${results[0].summary}"\n${results[0].url}`;

@@ -248,8 +248,10 @@ Deno.serve(async (req: Request) => {
 
   for (const url of links) {
     const platform = detectPlatform(url);
-    const ogSummary = await fetchOGSummary(url);
-    const summary = ogSummary ?? await callGemini(url, platform);
+    // 비공개 제출은 요약 생략
+    const summary = isPublic
+      ? (await fetchOGSummary(url) ?? await callGemini(url, platform))
+      : "";
     existingCount++;
     const numberLabel = `${weekLabel}-${existingCount}회`;
     try {
