@@ -371,17 +371,20 @@
       return `<span title="${name.trim()}">${PLATFORM_ICONS[key]}</span>`;
     }
 
-    // Survey platform link column mapping (gviz column indices)
-    // 9:링크드인, 10:인스타그램, 11:스레드, 12:유튜브, 13:블로그, 14:틱톡, 15:브런치
-    const SURVEY_LINK_COLS = [
-      { col: 9, platform: '링크드인', key: 'LinkedIn' },
-      { col: 10, platform: '인스타그램', key: 'Instagram' },
-      { col: 11, platform: '스레드', key: 'Threads' },
-      { col: 12, platform: '유튜브', key: 'YouTube' },
-      { col: 13, platform: '블로그', key: 'Blog' },
-      { col: 14, platform: '틱톡', key: 'TikTok' },
-      { col: 15, platform: '브런치', key: 'Brunch' },
-    ];
+    // 설문 링크 컬럼 범위: col9(일반), col10(링크드인)~col16(브런치)
+    const SURVEY_LINK_COL_RANGE = [9, 10, 11, 12, 13, 14, 15, 16];
+
+    // URL에서 플랫폼 감지 (컬럼 순서에 의존하지 않음)
+    function detectPlatformFromUrl(url) {
+      const u = url.toLowerCase();
+      if (u.includes('linkedin.com')) return 'LinkedIn';
+      if (u.includes('instagram.com')) return 'Instagram';
+      if (u.includes('threads.net') || u.includes('threads.com')) return 'Threads'; // threads.com 추가
+      if (u.includes('youtube.com') || u.includes('youtu.be')) return 'YouTube';
+      if (u.includes('tiktok.com')) return 'TikTok';
+      if (u.includes('brunch.co.kr')) return 'Brunch';
+      return 'Blog';
+    }
 
     // ── Discord nickname → real name mapping (loaded from members.json) ──
     let NICKNAME_MAP = {};
@@ -466,9 +469,13 @@
       return json.table.rows.map(row => {
         const c = row.c;
         const links = {};
-        for (const { col, key } of SURVEY_LINK_COLS) {
-          const v = c[col]?.v ?? '';
-          if (v && v.startsWith('http')) links[key] = v;
+        // 컬럼 위치 대신 URL로 플랫폼 감지 → 시트 컬럼 순서 변경에도 안전
+        for (const col of SURVEY_LINK_COL_RANGE) {
+          const v = (c[col]?.v ?? '').trim();
+          if (v && v.startsWith('http')) {
+            const key = detectPlatformFromUrl(v);
+            links[key] = v;
+          }
         }
         return {
           name: c[1]?.v ?? '',
@@ -579,7 +586,7 @@
 
         const topicShort = p.topic.length > 60 ? p.topic.slice(0, 60) + '...' : p.topic;
 
-        // 설문 플랫폼 아이콘
+        // 설문에서 선언한 플랫폼: 링크 있으면 컬러, 없으면 흑백
         const surveyTagHtml = surveyTags.map(t => {
           const key = mapPlatform(t);
           const link = mergedLinks[key];
@@ -587,7 +594,7 @@
           return `<span class="platform-nolink" title="${t} (링크 미등록)">${PLATFORM_ICONS[key] || key}</span>`;
         }).join('');
 
-        // 설문 플랫폼 목록에 없는 추가 링크 (survey + members.json 합친 mergedLinks 기준)
+        // 선언 목록에 없지만 링크가 있는 추가 플랫폼 (mergedLinks 기준)
         const extraTagHtml = Object.entries(mergedLinks)
           .filter(([key]) => !surveyKeys.has(key))
           .map(([key, link]) => `<a href="${link}" target="_blank" rel="noopener" class="platform-link" title="${key}">${PLATFORM_ICONS[key] || key}</a>`)
