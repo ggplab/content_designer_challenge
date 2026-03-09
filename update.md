@@ -15,17 +15,24 @@
 - **설문 링크 컬럼 범위 오류** — 브런치 컬럼(col16) 누락으로 링크 유실되던 문제 수정
 - **설문 링크 컬럼 순서 의존 제거** — 고정 컬럼 인덱스 대신 URL 자체로 플랫폼 감지하도록 변경 (시트 구조 변경에도 안전)
 - **추가 링크 유실** — `extraTagHtml`이 `memberLinks`만 보던 것을 `mergedLinks` 기준으로 수정
+- **CI 타입체크 에러** — Deno v2 `Uint8Array<ArrayBuffer>` 타입 호환성 및 `EdgeRuntime` 미정의 오류 수정 (`discord-verify/index.ts`, `.github/workflows/ci.yml`)
 
 ### 변경사항
+- **비공개 인증 요약 생략** — 비공개(blind) 제출 시 OG 파싱/Gemini 요약을 스킵하고, Discord·웹 메시지에서 요약 텍스트 미표시 (`discord-verify/index.ts`, `web-verify/index.ts`, `web/index.html`)
+- **최근 인증 타임라인 비공개 요약 숨김** — 비공개 인증 건은 타임라인에서 요약 텍스트 빈 칸 처리 (`web/index.html`)
 - **인증 폼 입력 필드** — Discord 닉네임 → 실명(이름) 입력으로 변경 (로그인 기능 연동 대비)
 - **선언 플랫폼 흑백 아이콘 복원** — 링크 없는 선언 플랫폼은 grayscale로 표시
 - **Netlify 설정 파일 제거** — `web/.netlify/`, `web/netlify.toml` 삭제 (GitHub Pages로 이전 완료)
 
 ### 멤버 변경사항
 - 이선정 (tidyline) 신규 추가 — 2주1회
+- 박수빈 인증 빈도 변경 — 2주1회 → 주1회 (`config/challenge_config.json`, `web/members.json`)
 
 ### 인프라
 - `supabase/functions/web-verify` 신규 Edge Function 배포 — 웹 인증 폼 처리
+- `supabase/functions/discord-verify` 재배포 — 비공개 요약 생략 반영
+- `supabase/functions/web-verify` 재배포 — 비공개 요약 생략 반영
+- `.github/workflows/ci.yml` — web-verify 타입체크 추가
 - `.github/workflows/sync-members.yml` — 멤버 자동 sync 워크플로우 추가
 - `scripts/sync-members.js` — Sheets에서 새 닉네임 감지 스크립트
 
