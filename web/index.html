@@ -125,6 +125,36 @@
     .timeline-link:hover { text-decoration: underline; }
 
     .loading { text-align: center; color: var(--muted); padding: 40px; }
+
+    /* 인증 폼 */
+    .verify-form { display: flex; flex-direction: column; gap: 10px; }
+    .verify-form input[type="text"] {
+      width: 100%; padding: 9px 12px;
+      border: 1px solid var(--border); border-radius: 8px;
+      background: var(--bg); color: var(--text);
+      font-size: 0.9rem; outline: none; transition: border-color .15s;
+    }
+    .verify-form input[type="text"]:focus { border-color: var(--accent2); }
+    .verify-form input[type="text"]::placeholder { color: var(--muted); }
+    .verify-links { display: flex; flex-direction: column; gap: 8px; }
+    .verify-row { display: flex; gap: 8px; align-items: center; }
+    .verify-row input { flex: 1; }
+    .verify-options { display: flex; align-items: center; gap: 16px; font-size: 0.85rem; }
+    .verify-options label { display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--muted); }
+    .verify-submit {
+      padding: 10px 20px; background: var(--accent); color: #fff;
+      border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600;
+      cursor: pointer; transition: opacity .15s; align-self: flex-end;
+    }
+    .verify-submit:hover { opacity: 0.85; }
+    .verify-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    .verify-result {
+      padding: 12px; border-radius: 8px; font-size: 0.85rem;
+      background: var(--stat-bg); border: 1px solid var(--border);
+      white-space: pre-line; line-height: 1.6; display: none;
+    }
+    .verify-result.success { border-color: var(--accent); }
+    .verify-result.error { border-color: #ef4444; color: #ef4444; }
   </style>
 </head>
 <body>
@@ -134,6 +164,25 @@
     <h1>너만알맡 챌린지</h1>
     <p>너 만들기만하고, 알고리즘에 맡겨 — 12주 콘텐츠 챌린지</p>
   </header>
+
+  <div class="section">
+    <h2>콘텐츠 인증</h2>
+    <div class="verify-form">
+      <input type="text" id="v-nickname" placeholder="Discord 닉네임" autocomplete="off">
+      <div class="verify-links">
+        <div class="verify-row"><input type="text" class="v-link" placeholder="링크 1 (필수) — https://..."></div>
+        <div class="verify-row"><input type="text" class="v-link" placeholder="링크 2"></div>
+        <div class="verify-row"><input type="text" class="v-link" placeholder="링크 3"></div>
+        <div class="verify-row"><input type="text" class="v-link" placeholder="링크 4"></div>
+        <div class="verify-row"><input type="text" class="v-link" placeholder="링크 5"></div>
+      </div>
+      <div class="verify-options">
+        <label><input type="checkbox" id="v-private"> 링크 비공개</label>
+        <button class="verify-submit" onclick="submitVerify()">인증하기</button>
+      </div>
+      <div class="verify-result" id="v-result"></div>
+    </div>
+  </div>
 
   <div class="section">
     <h2>통계</h2>
@@ -156,6 +205,64 @@
   </div>
 
   <script>
+    // ── 인증 폼 ──
+    const WEB_VERIFY_URL = 'https://tcxtcacibgoancvoiybx.supabase.co/functions/v1/web-verify';
+
+    async function submitVerify() {
+      const nickname = document.getElementById('v-nickname').value.trim();
+      const links = [...document.querySelectorAll('.v-link')].map(el => el.value.trim()).filter(Boolean);
+      const isPublic = !document.getElementById('v-private').checked;
+      const resultEl = document.getElementById('v-result');
+      const btn = document.querySelector('.verify-submit');
+
+      resultEl.style.display = 'none';
+      resultEl.className = 'verify-result';
+
+      if (!nickname) { showVerifyResult('닉네임을 입력해주세요.', false); return; }
+      const validLinks = links.filter(l => l.startsWith('http'));
+      if (validLinks.length === 0) { showVerifyResult('http로 시작하는 링크를 1개 이상 입력해주세요.', false); return; }
+
+      btn.disabled = true;
+      btn.textContent = '인증 중...';
+
+      try {
+        const resp = await fetch(WEB_VERIFY_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nickname, links: validLinks, isPublic }),
+        });
+        const data = await resp.json();
+        if (!resp.ok || data.error) {
+          showVerifyResult(data.error || '오류가 발생했습니다.', false);
+        } else {
+          const lines = [`✅ ${nickname}님, ${data.weekLabel} 인증 완료!`];
+          if (!isPublic) {
+            lines.push('🔒 링크 비공개로 저장했습니다.');
+            for (const r of data.results) lines.push(`• ${r.platform} · "${r.summary}"`);
+          } else if (data.results.length === 1) {
+            const r = data.results[0];
+            lines.push(`📌 ${r.platform} · "${r.summary}"`);
+          } else {
+            for (const r of data.results) lines.push(`• ${r.platform} · "${r.summary}"\n  ${r.url}`);
+          }
+          showVerifyResult(lines.join('\n'), true);
+          document.querySelectorAll('.v-link').forEach(el => el.value = '');
+        }
+      } catch {
+        showVerifyResult('네트워크 오류가 발생했습니다.', false);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '인증하기';
+      }
+    }
+
+    function showVerifyResult(msg, success) {
+      const el = document.getElementById('v-result');
+      el.textContent = msg;
+      el.className = 'verify-result ' + (success ? 'success' : 'error');
+      el.style.display = 'block';
+    }
+
     // ── Theme ──
     function toggleTheme() {
       const html = document.documentElement;

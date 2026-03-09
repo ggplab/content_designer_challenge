@@ -1,0 +1,31 @@
+name: Sync Members
+
+on:
+  schedule:
+    - cron: '0 15 * * *'  # 매일 자정 KST (UTC 15:00)
+  workflow_dispatch:       # 수동 실행 가능
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Sync members from Sheets
+        run: node scripts/sync-members.js
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add web/members.json
+          if git diff --staged --quiet; then
+            echo "변경 없음"
+          else
+            git commit -m "chore: 멤버 자동 sync ($(TZ=Asia/Seoul date '+%Y-%m-%d'))"
+            git push
+          fi
