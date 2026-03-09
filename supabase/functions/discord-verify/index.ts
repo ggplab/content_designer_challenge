@@ -8,10 +8,11 @@ const GCP_SERVICE_ACCOUNT_JSON = Deno.env.get("GCP_SERVICE_ACCOUNT_JSON")!;
 
 // ── 유틸 ──────────────────────────────────────────────────────────────────────
 
-function hexToBytes(hex: string): Uint8Array {
-  return new Uint8Array(
+function hexToBytes(hex: string): Uint8Array<ArrayBuffer> {
+  const arr = new Uint8Array(
     (hex.match(/.{1,2}/g) ?? []).map((b) => parseInt(b, 16))
   );
+  return new Uint8Array(arr.buffer as ArrayBuffer);
 }
 
 function toBase64Url(input: string | Uint8Array): string {
@@ -503,7 +504,7 @@ Deno.serve(async (req: Request) => {
     const customId: string = interaction.data?.custom_id ?? "";
     const isPublic = customId.endsWith(":public");
 
-    EdgeRuntime.waitUntil(
+    (globalThis as unknown as { EdgeRuntime: { waitUntil: (p: Promise<void>) => void } }).EdgeRuntime.waitUntil(
       processVerification(displayName, rawLinks, interaction.token, isPublic)
     );
 
