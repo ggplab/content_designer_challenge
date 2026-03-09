@@ -213,18 +213,18 @@ Deno.serve(async (req: Request) => {
     return new Response("Method Not Allowed", { status: 405 });
   }
 
-  let nickname: string, links: string[], isPublic: boolean;
+  let name: string, links: string[], isPublic: boolean;
   try {
     const body = await req.json();
-    nickname = (body.nickname ?? "").trim();
+    name = (body.name ?? body.nickname ?? "").trim(); // nickname은 하위 호환
     links = (body.links ?? []).map((l: string) => l.trim()).filter((l: string) => l.startsWith("http"));
     isPublic = body.isPublic !== false;
   } catch {
     return new Response(JSON.stringify({ error: "잘못된 요청 형식입니다." }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
   }
 
-  if (!nickname) {
-    return new Response(JSON.stringify({ error: "닉네임을 입력해주세요." }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+  if (!name) {
+    return new Response(JSON.stringify({ error: "이름을 입력해주세요." }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
   }
   if (links.length === 0) {
     return new Response(JSON.stringify({ error: "유효한 URL이 없습니다. http로 시작하는 링크를 입력해주세요." }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
@@ -241,7 +241,7 @@ Deno.serve(async (req: Request) => {
     return new Response(JSON.stringify({ error: "Google 인증 오류가 발생했습니다." }), { status: 500, headers: { ...CORS, "Content-Type": "application/json" } });
   }
 
-  let existingCount = await countWeekSubmissions(accessToken, nickname, weekLabel);
+  let existingCount = await countWeekSubmissions(accessToken, name, weekLabel);
   const results: { platform: string; url: string; summary: string }[] = [];
 
   for (const url of links) {
@@ -251,7 +251,7 @@ Deno.serve(async (req: Request) => {
     existingCount++;
     const numberLabel = `${weekLabel}-${existingCount}회`;
     try {
-      await appendToSheets(accessToken, [today, nickname, platform, url, numberLabel, summary, isPublic ? "public" : "private"]);
+      await appendToSheets(accessToken, [today, name, platform, url, numberLabel, summary, isPublic ? "public" : "private"]);
       results.push({ platform, url, summary });
     } catch (e) {
       console.error(`Sheets 저장 실패 (${url}):`, e);
