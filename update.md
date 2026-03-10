@@ -28,6 +28,10 @@
 - 이선정 (tidyline) 신규 추가 — 2주1회
 - 박수빈 인증 빈도 변경 — 2주1회 → 주1회 (`config/challenge_config.json`, `web/members.json`)
 
+### 협업 환경
+- **`CONTRIBUTING.md` 신규 추가** — 협업자 온보딩 문서 작성 (아키텍처, 로컬 셋업, 배포, 트러블슈팅, 보안 수칙 포함)
+- **`secrets/collaborator-onboarding.md` 생성** — 협업자에게 디스코드로 전달할 시크릿 키·접근 정보 패키지 (gitignore 보호, 레포 미포함)
+
 ### 인프라
 - `supabase/functions/web-verify` 신규 Edge Function 배포 — 웹 인증 폼 처리
 - `supabase/functions/discord-verify` 재배포 — 비공개 요약 생략 반영
