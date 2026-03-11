@@ -21,8 +21,5 @@ node_modules/
 # Logs
 *.log
 
-# Local Netlify folder
-.netlify
-
 # Discord 메시지 캐시 (정리 스킬용)
 .discord_message_cache.json
