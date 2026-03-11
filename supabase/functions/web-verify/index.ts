@@ -5,6 +5,14 @@ const GOOGLE_SHEET_ID = Deno.env.get("GOOGLE_SHEET_ID")!;
 const GCP_SERVICE_ACCOUNT_JSON = Deno.env.get("GCP_SERVICE_ACCOUNT_JSON")!;
 const DISCORD_BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN")!;
 const DISCORD_CHANNEL_ID = "1473868708261658695"; // #챌린지-인증
+const WEB_VERIFY_API_KEY = Deno.env.get("WEB_VERIFY_API_KEY")!;
+
+// 등록된 참가자 목록 (닉네임 포함)
+const VALID_NAMES = new Set([
+  "신지혜", "서영학", "박수빈", "송치오", "남희정",
+  "신예린", "김한솔", "박정현", "정윤영", "임정",
+  "강예정", "김희은", "지정수", "이인영", "팝콘",
+]);
 
 // ── 유틸 ──────────────────────────────────────────────────────────────────────
 
@@ -235,7 +243,7 @@ async function sendDiscordMessage(content: string): Promise<void> {
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-key",
 };
 
 // ── 메인 ─────────────────────────────────────────────────────────────────────
@@ -246,6 +254,16 @@ Deno.serve(async (req: Request) => {
   }
   if (req.method !== "POST") {
     return new Response("Method Not Allowed", { status: 405 });
+  }
+
+  // API 키 검증
+  const authHeader = req.headers.get("Authorization") ?? req.headers.get("x-api-key") ?? "";
+  const apiKey = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader;
+  if (!apiKey || apiKey !== WEB_VERIFY_API_KEY) {
+    return new Response(JSON.stringify({ error: "인증되지 않은 요청입니다." }), {
+      status: 401,
+      headers: { ...CORS, "Content-Type": "application/json" },
+    });
   }
 
   let name: string, links: string[], isPublic: boolean;
@@ -260,6 +278,9 @@ Deno.serve(async (req: Request) => {
 
   if (!name) {
     return new Response(JSON.stringify({ error: "이름을 입력해주세요." }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+  }
+  if (!VALID_NAMES.has(name)) {
+    return new Response(JSON.stringify({ error: `등록되지 않은 참가자입니다: ${name}` }), { status: 403, headers: { ...CORS, "Content-Type": "application/json" } });
   }
   if (links.length === 0) {
     return new Response(JSON.stringify({ error: "유효한 URL이 없습니다. http로 시작하는 링크를 입력해주세요." }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
