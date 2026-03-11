@@ -275,26 +275,31 @@ async function appendToSheets(
 
 // ── Google Sheets에서 주차별 제출 횟수 조회 ──────────────────────────────────
 
-async function countWeekSubmissions(
+async function getWeekCounts(
   accessToken: string,
   displayName: string,
   weekLabel: string
-): Promise<number> {
+): Promise<{ userCount: number; totalCount: number }> {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEET_ID}/values/%EC%8B%9C%ED%8A%B81!B:E`;
   const resp = await fetch(url, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   if (!resp.ok) {
     console.error("Sheets 조회 실패:", resp.status);
-    return 0;
+    return { userCount: 0, totalCount: 0 };
   }
   const data = await resp.json();
   const rows: string[][] = data.values ?? [];
   // 컬럼: B=user, C=platfrom, D=link, E=number
-  // number 컬럼에서 해당 유저 + 같은 주차 매칭
-  return rows.filter(
-    (row) => row[0] === displayName && (row[3] ?? "").startsWith(weekLabel)
-  ).length;
+  let userCount = 0;
+  let totalCount = 0;
+  for (const row of rows) {
+    if ((row[3] ?? "").startsWith(weekLabel)) {
+      totalCount++;
+      if (row[0] === displayName) userCount++;
+    }
+  }
+  return { userCount, totalCount };
 }
 
 // ── Discord follow-up 메시지 ──────────────────────────────────────────────────
@@ -317,6 +322,7 @@ async function sendFollowup(token: string, content: string): Promise<void> {
 
 async function processVerification(
   displayName: string,
+  userId: string,
   rawLinks: string[],
   token: string,
   isPublic: boolean
@@ -346,9 +352,11 @@ async function processVerification(
   }
 
   // 기존 제출 횟수 조회
-  let existingCount = await countWeekSubmissions(accessToken, displayName, weekLabel);
+  const { userCount, totalCount } = await getWeekCounts(accessToken, displayName, weekLabel);
+  let existingCount = userCount;
+  let weekTotal = totalCount;
 
-  const results: { platform: string; url: string; summary: string }[] = [];
+  const results: { platform: string; url: string; summary: string; medal: string }[] = [];
 
   for (const url of links) {
     const platform = detectPlatform(url);
@@ -357,7 +365,9 @@ async function processVerification(
       ? (await fetchOGSummary(url) ?? await callGemini(url, platform))
       : "";
     existingCount++;
+    weekTotal++;
     const numberLabel = `${weekLabel}-${existingCount}회`;
+    const medal = weekTotal === 1 ? " 🥇" : weekTotal === 2 ? " 🥈" : weekTotal === 3 ? " 🥉" : "";
 
     try {
       // 컬럼: date | user | platfrom(오타유지) | link | number | summary | etc
@@ -370,7 +380,7 @@ async function processVerification(
         summary,
         isPublic ? "public" : "private",
       ]);
-      results.push({ platform, url, summary });
+      results.push({ platform, url, summary, medal });
       console.log(`✅ Sheets 저장: ${platform} — ${url}`);
     } catch (e) {
       console.error(`Sheets 저장 실패 (${url}):`, e);
@@ -383,17 +393,18 @@ async function processVerification(
   }
 
   // 결과 메시지 조합
-  let msg = `✅ ${displayName}님, ${weekLabel} 인증 완료! 🎉\n\n`;
+  const mention = userId ? `<@${userId}>` : displayName;
+  let msg = `✅ ${mention}님, ${weekLabel} 인증 완료! 🎉\n\n`;
   if (!isPublic) {
     msg += "🔒 비공개로 인증했습니다.\n";
     for (const { platform } of results) {
       msg += `• ${platform}\n`;
     }
   } else if (results.length === 1) {
-    msg += `📌 ${results[0].platform} · "${results[0].summary}"\n${results[0].url}`;
+    msg += `📌 ${results[0].platform} · "${results[0].summary}"${results[0].medal}\n${results[0].url}`;
   } else {
-    for (const { platform, url, summary } of results) {
-      msg += `• ${platform} · "${summary}"\n  ${url}\n`;
+    for (const { platform, url, summary, medal } of results) {
+      msg += `• ${platform} · "${summary}"${medal}\n  ${url}\n`;
     }
   }
 
@@ -504,8 +515,9 @@ Deno.serve(async (req: Request) => {
     const customId: string = interaction.data?.custom_id ?? "";
     const isPublic = customId.endsWith(":public");
 
+    const userId: string = user.id ?? "";
     (globalThis as unknown as { EdgeRuntime: { waitUntil: (p: Promise<void>) => void } }).EdgeRuntime.waitUntil(
-      processVerification(displayName, rawLinks, interaction.token, isPublic)
+      processVerification(displayName, userId, rawLinks, interaction.token, isPublic)
     );
 
     return json({ type: 5 }); // DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE

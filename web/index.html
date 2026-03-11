@@ -573,7 +573,7 @@
       }).join('');
     }
 
-    function renderProfiles(surveyData) {
+    function renderProfiles(surveyData, rows) {
       const el = document.getElementById('profiles');
       const surveyNames = new Set(surveyData.map(p => p.name));
 
@@ -611,8 +611,11 @@
       });
 
       // 설문 미작성이지만 members.json에 링크가 있는 멤버 카드
+      const extraCardNames = new Set(
+        ALL_PARTICIPANTS.filter(p => !surveyNames.has(p.name) && MEMBER_LINKS[p.name]).map(p => p.name)
+      );
       const extraCards = ALL_PARTICIPANTS
-        .filter(p => !surveyNames.has(p.name) && MEMBER_LINKS[p.name])
+        .filter(p => extraCardNames.has(p.name))
         .map(p => {
           const tagHtml = Object.entries(MEMBER_LINKS[p.name]).map(([key, link]) =>
             `<a href="${link}" target="_blank" rel="noopener" class="platform-link" title="${key}">${PLATFORM_ICONS[key] || key}</a>`
@@ -625,7 +628,32 @@
           `;
         });
 
-      el.innerHTML = [...surveyCards, ...extraCards].join('');
+      // 설문 미작성 + members.json에도 없지만 인증 기록이 있는 멤버 자동 카드
+      const coveredNames = new Set([...surveyNames, ...extraCardNames]);
+      const sheetsUsers = {};
+      for (const row of (rows || [])) {
+        if (!row.user || coveredNames.has(row.user)) continue;
+        if (!sheetsUsers[row.user]) sheetsUsers[row.user] = {};
+        // 플랫폼별 최신 링크 저장 (MEMBER_LINKS가 있으면 우선)
+        const profileLink = (MEMBER_LINKS[row.user] || {})[row.platform];
+        const postLink = row.visibility !== 'private' ? row.link : '';
+        sheetsUsers[row.user][row.platform] = profileLink || postLink || sheetsUsers[row.user][row.platform] || '';
+      }
+      const autoCards = Object.entries(sheetsUsers).map(([name, platforms]) => {
+        const tagHtml = Object.entries(platforms).map(([platform, link]) => {
+          const icon = PLATFORM_ICONS[platform] || platform;
+          if (link) return `<a href="${link}" target="_blank" rel="noopener" class="platform-link" title="${platform}">${icon}</a>`;
+          return `<span class="platform-link" title="${platform}">${icon}</span>`;
+        }).join('');
+        return `
+          <div class="profile-card">
+            <div class="profile-name">${name}</div>
+            <div class="profile-tags">${tagHtml}</div>
+          </div>
+        `;
+      });
+
+      el.innerHTML = [...surveyCards, ...extraCards, ...autoCards].join('');
     }
 
     function renderTimeline(data) {
@@ -655,7 +683,7 @@
         const [rows, survey] = await Promise.all([fetchSheetData(), fetchSurveyData()]);
         renderStats(rows);
         renderLeaderboard(rows);
-        renderProfiles(survey);
+        renderProfiles(survey, rows);
         renderTimeline(rows);
       } catch (e) {
         console.error('데이터 로딩 실패:', e);

@@ -3,6 +3,8 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")!;
 const GOOGLE_SHEET_ID = Deno.env.get("GOOGLE_SHEET_ID")!;
 const GCP_SERVICE_ACCOUNT_JSON = Deno.env.get("GCP_SERVICE_ACCOUNT_JSON")!;
+const DISCORD_BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN")!;
+const DISCORD_CHANNEL_ID = "1473868708261658695"; // #챌린지-인증
 
 // ── 유틸 ──────────────────────────────────────────────────────────────────────
 
@@ -188,13 +190,44 @@ async function appendToSheets(accessToken: string, row: string[]): Promise<void>
 
 // ── 주차별 제출 횟수 조회 ─────────────────────────────────────────────────────
 
-async function countWeekSubmissions(accessToken: string, nickname: string, weekLabel: string): Promise<number> {
+async function getWeekCounts(
+  accessToken: string,
+  name: string,
+  weekLabel: string
+): Promise<{ userCount: number; totalCount: number }> {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEET_ID}/values/%EC%8B%9C%ED%8A%B81!B:E`;
   const resp = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
-  if (!resp.ok) return 0;
+  if (!resp.ok) return { userCount: 0, totalCount: 0 };
   const data = await resp.json();
   const rows: string[][] = data.values ?? [];
-  return rows.filter((row) => row[0] === nickname && (row[3] ?? "").startsWith(weekLabel)).length;
+  let userCount = 0;
+  let totalCount = 0;
+  for (const row of rows) {
+    if ((row[3] ?? "").startsWith(weekLabel)) {
+      totalCount++;
+      if (row[0] === name) userCount++;
+    }
+  }
+  return { userCount, totalCount };
+}
+
+// ── Discord 채널 메시지 전송 ───────────────────────────────────────────────────
+
+async function sendDiscordMessage(content: string): Promise<void> {
+  const resp = await fetch(
+    `https://discord.com/api/v10/channels/${DISCORD_CHANNEL_ID}/messages`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bot ${DISCORD_BOT_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ content }),
+    }
+  );
+  if (!resp.ok) {
+    console.error("Discord 메시지 전송 실패:", resp.status, await resp.text());
+  }
 }
 
 // ── CORS 헤더 ─────────────────────────────────────────────────────────────────
@@ -243,20 +276,23 @@ Deno.serve(async (req: Request) => {
     return new Response(JSON.stringify({ error: "Google 인증 오류가 발생했습니다." }), { status: 500, headers: { ...CORS, "Content-Type": "application/json" } });
   }
 
-  let existingCount = await countWeekSubmissions(accessToken, name, weekLabel);
-  const results: { platform: string; url: string; summary: string }[] = [];
+  const { userCount, totalCount } = await getWeekCounts(accessToken, name, weekLabel);
+  let existingCount = userCount;
+  let weekTotal = totalCount;
+  const results: { platform: string; url: string; summary: string; medal: string }[] = [];
 
   for (const url of links) {
     const platform = detectPlatform(url);
-    // 비공개 제출은 요약 생략
     const summary = isPublic
       ? (await fetchOGSummary(url) ?? await callGemini(url, platform))
       : "";
     existingCount++;
+    weekTotal++;
     const numberLabel = `${weekLabel}-${existingCount}회`;
+    const medal = weekTotal === 1 ? " 🥇" : weekTotal === 2 ? " 🥈" : weekTotal === 3 ? " 🥉" : "";
     try {
       await appendToSheets(accessToken, [today, name, platform, url, numberLabel, summary, isPublic ? "public" : "private"]);
-      results.push({ platform, url, summary });
+      results.push({ platform, url, summary, medal });
     } catch (e) {
       console.error(`Sheets 저장 실패 (${url}):`, e);
     }
@@ -265,6 +301,22 @@ Deno.serve(async (req: Request) => {
   if (results.length === 0) {
     return new Response(JSON.stringify({ error: "저장 중 오류가 발생했습니다." }), { status: 500, headers: { ...CORS, "Content-Type": "application/json" } });
   }
+
+  // Discord #챌린지-인증 채널에 메시지 전송
+  let msg = `✅ ${name}님, ${weekLabel} 인증 완료! 🎉\n\n`;
+  if (!isPublic) {
+    msg += "🔒 비공개로 인증했습니다.\n";
+    for (const { platform } of results) {
+      msg += `• ${platform}\n`;
+    }
+  } else if (results.length === 1) {
+    msg += `📌 ${results[0].platform} · "${results[0].summary}"${results[0].medal}\n${results[0].url}`;
+  } else {
+    for (const { platform, url, summary, medal } of results) {
+      msg += `• ${platform} · "${summary}"${medal}\n  ${url}\n`;
+    }
+  }
+  await sendDiscordMessage(msg.trim());
 
   return new Response(JSON.stringify({ ok: true, weekLabel, results }), {
     headers: { ...CORS, "Content-Type": "application/json" },
