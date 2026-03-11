@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>너만·알맡 — 온보딩</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg:     #F5F4F0;
+      --card:   #FFFFFF;
+      --ink:    #1A1A1A;
+      --soft:   #555555;
+      --muted:  #999999;
+      --border: #E0DDD8;
+      --shadow: rgba(0,0,0,0.07);
+
+      --c1: #E8E3DC; --c1t: #7A6348;
+      --c2: #D6E8DA; --c2t: #3A6E52;
+      --c3: #DAE1E8; --c3t: #2D5A6E;
+      --c4: #E2DAE8; --c4t: #5C3A96;
+    }
+
+    html, body {
+      width: 960px;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      padding: 28px 32px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* ─── TOP BAR ─── */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-shrink: 0;
+    }
+
+    .topbar-left { display: flex; flex-direction: column; gap: 5px; }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 3px 10px;
+      width: fit-content;
+    }
+
+    .main-title {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      color: var(--ink);
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+    .main-title em { font-style: normal; color: var(--soft); }
+
+    .subtitle {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+
+    .topbar-right { display: flex; gap: 6px; align-items: center; }
+
+    .pill {
+      font-size: 12px;
+      color: var(--soft);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 11px;
+    }
+    .pill strong { color: var(--ink); font-weight: 700; }
+
+    /* ─── 4-COLUMN JOURNEY ─── */
+    .journey {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .step-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 16px 14px;
+      box-shadow: 0 2px 8px var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .step-num {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+
+    .s1 .step-num { background: var(--c1); color: var(--c1t); }
+    .s2 .step-num { background: var(--c2); color: var(--c2t); }
+    .s3 .step-num { background: var(--c3); color: var(--c3t); }
+    .s4 .step-num { background: var(--c4); color: var(--c4t); }
+
+    .header-text { flex: 1; }
+
+    .step-title {
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      line-height: 1.2;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
+    .repeat-tag {
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--c4t);
+      background: var(--c4);
+      border-radius: 100px;
+      padding: 2px 6px;
+    }
+
+    .timing {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .divider-h {
+      width: 100%;
+      height: 1px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .action {
+      display: flex;
+      gap: 7px;
+      align-items: flex-start;
+    }
+
+    .dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--muted);
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    .action-body { flex: 1; }
+
+    .action-main {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.4;
+    }
+
+    .action-sub {
+      font-size: 11px;
+      color: var(--soft);
+      line-height: 1.4;
+      margin-top: 2px;
+    }
+
+    .ch {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--soft);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      margin: 2px 2px 0 0;
+      font-family: 'SF Mono', monospace;
+    }
+
+    .cmd {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      color: #5865F2;
+      background: #EDEFFF;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: 'SF Mono', monospace;
+    }
+
+    /* ─── RULES BAR ─── */
+    .rules {
+      background: var(--ink);
+      border-radius: 10px;
+      padding: 11px 18px;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-shrink: 0;
+    }
+
+    .rules-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      white-space: nowrap;
+      margin-right: 18px;
+      padding-right: 18px;
+      border-right: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .rules-list {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0 16px;
+      flex: 1;
+    }
+
+    .rule { display: flex; gap: 8px; align-items: flex-start; }
+
+    .rule-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.3);
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    .rule-text { font-size: 11px; color: rgba(255,255,255,0.7); line-height: 1.4; }
+    .rule-text strong { color: #fff; font-weight: 700; display: block; }
+
+    /* ─── FOOTER ─── */
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .footer-logo { font-size: 14px; font-weight: 900; letter-spacing: -0.02em; color: var(--ink); }
+    .footer-sub  { font-size: 11px; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+        <div class="badge">12주 콘텐츠 챌린지</div>
+        <div class="subtitle">처음 오셨나요? 4단계만 따라오시면 됩니다.</div>
+      </div>
+      <div class="main-title">만들기만 하면 됩니다. <em>나머지는 알고리즘에 맡기세요.</em></div>
+    </div>
+    <div class="topbar-right">
+      <div class="pill">준비 <strong>2/23 – 3/1</strong></div>
+      <div class="pill">발행 <strong>3/2 – 5/23</strong> · 12주</div>
+    </div>
+  </div>
+
+  <!-- 4-COLUMN JOURNEY -->
+  <div class="journey">
+
+    <div class="step-card s1">
+      <div class="card-header">
+        <div class="step-num">1</div>
+        <div class="header-text">
+          <div class="step-title">공지 확인</div>
+          <div class="timing">지금 바로</div>
+        </div>
+      </div>
+      <div class="divider-h"></div>
+      <div class="actions">
+        <div class="action">
+          <div class="dot"></div>
+          <div class="action-body">
+            <div class="action-main">이 공지를 끝까지 읽기</div>
+            <div class="action-sub">챌린지 기간 · 규칙 · 인증 방법 파악</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="dot"></div>
+          <div class="action-body">
+            <div class="action-main">채널 구조 파악</div>
+            <div class="action-sub">
+              <span class="ch">#공지</span>
+              <span class="ch">#자기소개</span>
+              <span class="ch">#목표-제출</span>
+              <span class="ch">#챌린지-인증</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card s2">
+      <div class="card-header">
+        <div class="step-num">2</div>
+        <div class="header-text">
+          <div class="step-title">자기소개 작성</div>
+          <div class="timing">준비기간 중 · 3/1까지</div>
+        </div>
+      </div>
+      <div class="divider-h"></div>
+      <div class="actions">
+        <div class="action">
+          <div class="dot"></div>
+          <div class="action-body">
+            <div class="action-main">#자기소개 채널에 글 올리기</div>
+            <div class="action-sub">이름 · 메인 플랫폼 · 12주 후 목표</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="dot"></div>
+          <div class="action-body">
+            <div class="action-main">#목표-제출에 목표 선언</div>
+            <div class="action-sub">① 최종 목표 &nbsp;② KPI 숫자 &nbsp;③ 메인 플랫폼</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card s3">
+      <div class="card-header">
+        <div class="step-num">3</div>
+        <div class="header-text">
+          <div class="step-title">설문조사 제출</div>
+          <div class="timing">3/1(일) 마감</div>
+        </div>
+      </div>
+      <div class="divider-h"></div>
+      <div class="actions">
+        <div class="action">
+          <div class="dot"></div>
+          <div class="action-body">
+            <div class="action-main">설문 링크 클릭 → 제출</div>
+            <div class="action-sub">발행 주기 · 플랫폼 · 목표 입력 (5분)</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="dot"></div>
+          <div class="action-body">
+            <div class="action-main">완료 후 준비 끝!</div>
+            <div class="action-sub">3/2(월)부터 본격 발행 시작</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card s4">
+      <div class="card-header">
+        <div class="step-num">4</div>
+        <div class="header-text">
+          <div class="step-title">매주 챌린지 인증</div>
+          <div style="margin-top:1px;"><span class="repeat-tag">↻ 매주 반복</span></div>
+          <div class="timing">3/2 – 5/23 · 12주</div>
+        </div>
+      </div>
+      <div class="divider-h"></div>
+      <div class="actions">
+        <div class="action">
+          <div class="dot"></div>
+          <div class="action-body">
+            <div class="action-main">아무 플랫폼에 콘텐츠 발행</div>
+            <div class="action-sub">LinkedIn · Instagram · Threads · YouTube · Blog</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="dot"></div>
+          <div class="action-body">
+            <div class="action-main">#챌린지-인증에서 인증</div>
+            <div class="action-sub"><span class="cmd">/인증</span> → 링크 입력 → 봇이 자동 기록</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RULES BAR -->
+  <div class="rules">
+    <div class="rules-label">Rules</div>
+    <div class="rules-list">
+      <div class="rule">
+        <div class="rule-dot"></div>
+        <div class="rule-text"><strong>최소 2주에 1회</strong>주 1회 권장, 최소 격주</div>
+      </div>
+      <div class="rule">
+        <div class="rule-dot"></div>
+        <div class="rule-text"><strong>플랫폼 자유</strong>어디에 올려도 인증 가능</div>
+      </div>
+      <div class="rule">
+        <div class="rule-dot"></div>
+        <div class="rule-text"><strong>2주 연속 미인증 시 DM</strong>처벌 아닌 격려 메시지</div>
+      </div>
+      <div class="rule">
+        <div class="rule-dot"></div>
+        <div class="rule-text"><strong>봇이 자동 기록</strong>수동 입력 없이 집계</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-logo">너만·알맡</div>
+    <div class="footer-sub">"만들기만 하면 됩니다."</div>
+    <div class="footer-sub">2026.02.23 – 05.23</div>
+  </div>
+
+</body>
+</html>
