@@ -187,6 +187,62 @@
     }
     .verify-result.success { border-color: var(--accent); }
     .verify-result.error { border-color: #ef4444; color: #ef4444; }
+
+    /* API 연동 버튼 */
+    .api-cta {
+      display: block; width: 100%; padding: 12px;
+      background: transparent; color: var(--accent2);
+      border: 1.5px solid var(--accent2); border-radius: 12px;
+      font-size: 0.9rem; font-weight: 600;
+      cursor: pointer; transition: background .15s, color .15s;
+      text-align: center; margin-top: 10px; letter-spacing: 0.01em;
+    }
+    .api-cta:hover { background: var(--accent2); color: #fff; }
+
+    /* API 모달 */
+    .api-block {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px 14px; margin-bottom: 14px;
+    }
+    .api-block-label {
+      font-size: 0.72rem; color: var(--muted); margin-bottom: 6px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .api-block-row { display: flex; align-items: center; gap: 8px; }
+    .api-block-value {
+      flex: 1; font-family: 'Menlo', 'Consolas', monospace;
+      font-size: 0.78rem; color: var(--text); word-break: break-all;
+      background: none; border: none; outline: none; resize: none;
+      cursor: text; padding: 0;
+    }
+    .api-copy-btn {
+      flex-shrink: 0; padding: 4px 10px; font-size: 0.75rem;
+      background: var(--accent2); color: #fff; border: none;
+      border-radius: 6px; cursor: pointer; transition: opacity .15s;
+      white-space: nowrap;
+    }
+    .api-copy-btn:hover { opacity: 0.85; }
+    .api-copy-btn.copied { background: var(--accent); }
+    .api-secret-toggle {
+      flex-shrink: 0; padding: 4px 8px; font-size: 0.75rem;
+      background: none; color: var(--muted); border: 1px solid var(--border);
+      border-radius: 6px; cursor: pointer;
+    }
+    .api-code-block {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px 14px; margin-bottom: 14px;
+    }
+    .api-code-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .api-code-label { font-size: 0.72rem; color: var(--muted); font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.05em; }
+    .api-code-body {
+      font-family: 'Menlo', 'Consolas', monospace; font-size: 0.72rem;
+      color: var(--text); white-space: pre-wrap; word-break: break-all; line-height: 1.6;
+    }
+    .api-note { font-size: 0.78rem; color: var(--muted); line-height: 1.6; margin-bottom: 4px; }
   </style>
 </head>
 <body>
@@ -198,6 +254,55 @@
   </header>
 
   <button class="verify-cta" onclick="openVerifyModal()">콘텐츠 인증하기</button>
+  <button class="api-cta" onclick="openApiModal()">🔗 API로 인증 연동</button>
+
+  <!-- API 연동 모달 -->
+  <div class="modal-overlay" id="api-modal" onclick="closeApiOnBackdrop(event)">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>API 인증 연동</h3>
+        <button class="modal-close" onclick="closeApiModal()">✕</button>
+      </div>
+      <p class="api-note">아래 정보를 복사해서 자동화 스크립트, n8n, Zapier 등에서 직접 인증을 호출할 수 있습니다.</p>
+      <br>
+      <div class="api-block">
+        <div class="api-block-label">Endpoint (POST)</div>
+        <div class="api-block-row">
+          <span class="api-block-value" id="api-endpoint">https://tcxtcacibgoancvoiybx.supabase.co/functions/v1/web-verify</span>
+          <button class="api-copy-btn" onclick="copyApiField('api-endpoint', this)">복사</button>
+        </div>
+      </div>
+      <div class="api-block">
+        <div class="api-block-label">API Key (Authorization: Bearer)</div>
+        <div class="api-block-row">
+          <span class="api-block-value" id="api-key" data-full="5e483492d2d2e34ab1fed07b356d0c6046a9857606b54e354e70355b9dcd47aa" data-masked="5e4834••••••••••••••••••••••••••••••••••••••••••••••••••••••••••aa">5e4834••••••••••••••••••••••••••••••••••••••••••••••••••••••••••aa</span>
+          <button class="api-secret-toggle" onclick="toggleApiKey()" id="api-key-toggle">표시</button>
+          <button class="api-copy-btn" onclick="copyApiKey(this)">복사</button>
+        </div>
+      </div>
+      <div class="api-code-block">
+        <div class="api-code-header">
+          <span class="api-code-label">Request Body (JSON)</span>
+          <button class="api-copy-btn" onclick="copyCode('api-body-code', this)">복사</button>
+        </div>
+        <pre class="api-code-body" id="api-body-code">{
+  "name": "이름",
+  "links": ["https://your-post-url.com/..."],
+  "isPublic": true
+}</pre>
+      </div>
+      <div class="api-code-block">
+        <div class="api-code-header">
+          <span class="api-code-label">curl 예시</span>
+          <button class="api-copy-btn" onclick="copyCode('api-curl-code', this)">복사</button>
+        </div>
+        <pre class="api-code-body" id="api-curl-code">curl -X POST https://tcxtcacibgoancvoiybx.supabase.co/functions/v1/web-verify \
+  -H "Authorization: Bearer 5e483492d2d2e34ab1fed07b356d0c6046a9857606b54e354e70355b9dcd47aa" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"이름","links":["https://..."]}'</pre>
+      </div>
+    </div>
+  </div>
 
   <!-- 인증 모달 -->
   <div class="modal-overlay" id="verify-modal" onclick="closeOnBackdrop(event)">
@@ -251,6 +356,44 @@
   </div>
 
   <script>
+    // ── API 연동 모달 ──
+    function openApiModal() {
+      document.getElementById('api-modal').classList.add('open');
+    }
+    function closeApiModal() {
+      document.getElementById('api-modal').classList.remove('open');
+    }
+    function closeApiOnBackdrop(e) {
+      if (e.target === document.getElementById('api-modal')) closeApiModal();
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeApiModal(); closeVerifyModal(); } });
+
+    let apiKeyVisible = false;
+    function toggleApiKey() {
+      const el = document.getElementById('api-key');
+      apiKeyVisible = !apiKeyVisible;
+      el.textContent = apiKeyVisible ? el.dataset.full : el.dataset.masked;
+      document.getElementById('api-key-toggle').textContent = apiKeyVisible ? '숨기기' : '표시';
+    }
+    function copyApiKey(btn) {
+      const el = document.getElementById('api-key');
+      navigator.clipboard.writeText(el.dataset.full).then(() => flashCopy(btn));
+    }
+    function copyApiField(id, btn) {
+      const text = document.getElementById(id).textContent;
+      navigator.clipboard.writeText(text).then(() => flashCopy(btn));
+    }
+    function copyCode(id, btn) {
+      const text = document.getElementById(id).textContent;
+      navigator.clipboard.writeText(text).then(() => flashCopy(btn));
+    }
+    function flashCopy(btn) {
+      const orig = btn.textContent;
+      btn.textContent = '완료 ✓';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1500);
+    }
+
     // ── 인증 모달 ──
     const WEB_VERIFY_URL = 'https://tcxtcacibgoancvoiybx.supabase.co/functions/v1/web-verify';
 
@@ -265,7 +408,6 @@
     function closeOnBackdrop(e) {
       if (e.target === document.getElementById('verify-modal')) closeVerifyModal();
     }
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeVerifyModal(); });
 
     async function submitVerify() {
       const name = document.getElementById('v-name').value.trim();
@@ -285,7 +427,10 @@
       try {
         const resp = await fetch(WEB_VERIFY_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer 5e483492d2d2e34ab1fed07b356d0c6046a9857606b54e354e70355b9dcd47aa',
+          },
           body: JSON.stringify({ name, links: validLinks, isPublic }),
         });
         const data = await resp.json();
