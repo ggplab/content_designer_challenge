@@ -1,20 +1,81 @@
 {
   "participants": [
-    { "name": "신지혜", "freq": "주1회", "links": { "Brunch": "https://brunch.co.kr/@smol" } },
-    { "name": "서영학", "freq": "주1회", "links": { "LinkedIn": "https://www.linkedin.com/in/inspire12/" } },
-    { "name": "박수빈", "freq": "주1회", "links": { "Blog": "https://soobing.github.io/posts/" } },
-    { "name": "송치오", "freq": "주1회" },
-    { "name": "남희정", "freq": "주1회" },
-    { "name": "신예린", "freq": "2주1회" },
-    { "name": "김한솔", "freq": "주1회" },
-    { "name": "박정현", "freq": "2주1회" },
-    { "name": "정윤영", "freq": "주1회" },
-    { "name": "임정", "freq": "주1회" },
-    { "name": "강예정", "freq": "2주1회" },
-    { "name": "김희은", "freq": "2주1회" },
-    { "name": "지정수", "freq": "주1회" },
-    { "name": "이인영", "freq": "주1회", "links": { "LinkedIn": "https://www.linkedin.com/in/2innnnn0/" } },
-    { "name": "이선정", "freq": "2주1회" }
+    {
+      "name": "신지혜",
+      "freq": "주1회",
+      "links": {
+        "Brunch": "https://brunch.co.kr/@smol"
+      }
+    },
+    {
+      "name": "서영학",
+      "freq": "주1회",
+      "links": {
+        "LinkedIn": "https://www.linkedin.com/in/inspire12/"
+      }
+    },
+    {
+      "name": "박수빈",
+      "freq": "주1회",
+      "links": {
+        "Blog": "https://soobing.github.io/posts/"
+      }
+    },
+    {
+      "name": "송치오",
+      "freq": "주1회"
+    },
+    {
+      "name": "남희정",
+      "freq": "주1회"
+    },
+    {
+      "name": "신예린",
+      "freq": "2주1회"
+    },
+    {
+      "name": "김한솔",
+      "freq": "주1회"
+    },
+    {
+      "name": "박정현",
+      "freq": "2주1회"
+    },
+    {
+      "name": "정윤영",
+      "freq": "주1회"
+    },
+    {
+      "name": "임정",
+      "freq": "주1회"
+    },
+    {
+      "name": "강예정",
+      "freq": "2주1회"
+    },
+    {
+      "name": "김희은",
+      "freq": "2주1회"
+    },
+    {
+      "name": "지정수",
+      "freq": "주1회"
+    },
+    {
+      "name": "이인영",
+      "freq": "주1회",
+      "links": {
+        "LinkedIn": "https://www.linkedin.com/in/2innnnn0/"
+      }
+    },
+    {
+      "name": "이선정",
+      "freq": "2주1회"
+    },
+    {
+      "name": "nunnu",
+      "freq": "2주1회"
+    }
   ],
   "nickname_map": {
     "soobing": "박수빈",
@@ -25,6 +86,7 @@
     "lizzie": "정윤영",
     "Hailey 박정현": "박정현",
     "팝콘": "이인영",
-    "tidyline": "이선정"
+    "tidyline": "이선정",
+    "nunnu": "nunnu"
   }
 }
