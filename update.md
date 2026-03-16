@@ -2,6 +2,33 @@
 
 ---
 
+## 2026-03-17
+
+### 신규 기능
+- **Discord OAuth 웹 로그인 도입** — `account.html`에서 Discord 계정으로 로그인하고 참가자 이름을 연결할 수 있는 계정 페이지 추가 (`web/account.html`, `web/account.js`)
+- **사용자별 API 키 발급 기능 추가** — 발급, 조회, 폐기용 Edge Function 추가 (`create-api-key`, `list-api-keys`, `revoke-api-key`)
+- **참가자 이름 셀프 연결 기능 추가** — 로그인한 사용자가 `claim-member-profile`로 본인 참가자 이름을 직접 연결 가능
+- **인증/키 관리 DB 스키마 추가** — `challenge_members`, `member_profiles`, `api_keys`, `api_audit_logs` 및 RLS 정책 반영 (`supabase/migrations/20260316143000_web_auth_api_keys.sql`)
+
+### 변경사항
+- **`web-verify` 인증 모델 전환** — 공용 API 키 비교에서 세션 또는 사용자별 API 키 기반 식별로 변경, 본인 이름만 제출 가능하도록 검증 강화
+- **계정 페이지 UX 개선** — API 키 이름 자동 입력, 만료일 3개월 기본값, 발급 직후 키 표시/복사 버튼 추가
+- **대시보드 진입점 확장** — 메인 페이지에서 계정/API 키 관리 페이지로 이동 버튼 추가 (`web/index.html`)
+- **배포 및 운영 문서 보강** — 웹 로그인/API 키 설계안, 배포 체크리스트, 함수 일괄 배포 스크립트 추가
+- **CI 확장** — 새 Edge Function들(`claim-member-profile`, `create-api-key`, `list-api-keys`, `revoke-api-key`)도 `deno check` 대상에 포함
+
+### 인프라
+- **Supabase 원격 DB 반영 완료** — 인증/키 관리 마이그레이션을 원격 프로젝트에 적용
+- **인증 관련 Edge Function 재배포 완료** — `discord-verify`, `web-verify`, `claim-member-profile`, `create-api-key`, `list-api-keys`, `revoke-api-key`
+- **Discord OAuth Provider 설정 완료** — Supabase Auth와 Discord Developer Portal redirect 설정 반영
+- **웹 공개 설정 반영** — `web/app-config.js`에 Supabase URL/functions URL 및 publishable key 설정
+
+### 운영 메모
+- **Supabase 시크릿명 조정** — `SUPABASE_SERVICE_ROLE_KEY` 대신 커스텀 시크릿 `SERVICE_ROLE_KEY`를 사용하도록 코드/문서 수정
+- **공개 가능한 키와 비공개 키 분리 정리** — `app-config.js`에는 publishable key만 두고, service role key와 사용자 API 키는 Edge Function 시크릿으로만 관리
+
+---
+
 ## 2026-03-16
 
 ### 보안 구조 변경
