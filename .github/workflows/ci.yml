@@ -47,3 +47,7 @@ jobs:
         run: |
           deno check supabase/functions/discord-verify/index.ts
           deno check supabase/functions/web-verify/index.ts
+          deno check supabase/functions/create-api-key/index.ts
+          deno check supabase/functions/list-api-keys/index.ts
+          deno check supabase/functions/claim-member-profile/index.ts
+          deno check supabase/functions/revoke-api-key/index.ts

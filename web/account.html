@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>너만알맡 - 계정 관리</title>
+  <style>
+    :root {
+      --bg: #f4f4ef;
+      --card: #ffffff;
+      --text: #171717;
+      --muted: #666;
+      --border: #d9d4ca;
+      --accent: #0f766e;
+      --accent-2: #1d4ed8;
+      --danger: #b91c1c;
+      --soft: #f7f6f2;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #efede6 0%, #f8f7f3 180px, #f4f4ef 100%);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 32px 20px 64px;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .topbar a {
+      color: var(--accent-2);
+      text-decoration: none;
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+    h1 {
+      font-size: 1.7rem;
+      margin: 0 0 6px;
+    }
+    .subtitle {
+      color: var(--muted);
+      margin: 0 0 24px;
+      line-height: 1.6;
+    }
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+    }
+    .card h2 {
+      margin: 0 0 14px;
+      font-size: 1rem;
+      color: var(--accent-2);
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button.primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    button.secondary {
+      background: var(--soft);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    button.danger {
+      background: #fff1f2;
+      color: var(--danger);
+      border: 1px solid #fecdd3;
+    }
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+    .status {
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: var(--soft);
+      border: 1px solid var(--border);
+      line-height: 1.6;
+      font-size: 0.92rem;
+    }
+    .status.error {
+      color: var(--danger);
+      border-color: #fecaca;
+      background: #fef2f2;
+    }
+    .status.success {
+      color: #166534;
+      border-color: #bbf7d0;
+      background: #f0fdf4;
+    }
+    .status-title {
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+    .meta-item {
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: var(--soft);
+      border: 1px solid var(--border);
+    }
+    .meta-label {
+      display: block;
+      font-size: 0.74rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .meta-value {
+      font-size: 0.92rem;
+      font-weight: 600;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+    form {
+      display: grid;
+      gap: 12px;
+    }
+    label {
+      display: grid;
+      gap: 6px;
+      font-size: 0.86rem;
+      color: var(--muted);
+    }
+    input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.92rem;
+      background: #fff;
+      color: var(--text);
+    }
+    select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.92rem;
+      background: #fff;
+      color: var(--text);
+    }
+    .list {
+      display: grid;
+      gap: 10px;
+    }
+    .list-item {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      background: var(--soft);
+    }
+    .list-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .list-title {
+      font-weight: 700;
+      margin: 0 0 4px;
+    }
+    .list-sub {
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.5;
+      margin: 0;
+    }
+    .empty {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+    code {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 0.86rem;
+    }
+    .inline-hint {
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.5;
+      margin: -4px 0 2px;
+    }
+    .secret-box {
+      border: 1px dashed var(--border);
+      background: #fff;
+      border-radius: 10px;
+      padding: 12px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 0.84rem;
+      word-break: break-all;
+      color: var(--text);
+      margin-top: 10px;
+    }
+    @media (max-width: 640px) {
+      main { padding-top: 24px; }
+      .topbar { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="topbar">
+      <a href="./index.html">대시보드로 돌아가기</a>
+      <div class="actions">
+        <button class="secondary" id="refresh-button" type="button">새로고침</button>
+        <button class="secondary" id="logout-button" type="button">로그아웃</button>
+      </div>
+    </div>
+
+    <h1>계정 및 API 키 관리</h1>
+    <p class="subtitle">
+      Discord 로그인으로 참가자 계정을 연결하고, 서버 자동화용 API 키를 발급하거나 폐기합니다.
+      브라우저에서는 장기 API 키 대신 로그인 세션을 사용합니다.
+    </p>
+
+    <div class="grid">
+      <section class="card">
+        <h2>로그인 상태</h2>
+        <div id="auth-status" class="status">초기화 중...</div>
+        <div class="actions" style="margin-top:14px;">
+          <button class="primary" id="login-button" type="button">Discord로 로그인</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>내 참가자 정보</h2>
+        <div id="profile-meta" class="meta"></div>
+      </section>
+
+      <section class="card">
+        <h2>참가자 이름 연결</h2>
+        <p class="subtitle" style="margin:0 0 14px;">
+          처음 로그인한 계정은 참가자 이름을 한 번 연결해야 합니다.
+        </p>
+        <form id="claim-profile-form">
+          <label>
+            참가자 이름
+            <select id="claim-challenge-name"></select>
+          </label>
+          <label>
+            표시 이름
+            <input id="claim-display-name" type="text" maxlength="80" placeholder="예: 김소진">
+          </label>
+          <div class="actions">
+            <button class="primary" id="claim-profile-button" type="submit">이 이름으로 연결</button>
+          </div>
+        </form>
+        <div id="claim-profile-result" class="status" style="display:none; margin-top:14px;"></div>
+      </section>
+
+      <section class="card">
+        <h2>새 API 키 발급</h2>
+        <form id="create-key-form">
+          <label>
+            키 이름
+            <input id="key-label" type="text" maxlength="80" placeholder="예: n8n, home-server">
+          </label>
+          <div class="inline-hint">기본값은 참가자 이름과 오늘 날짜로 자동 설정됩니다.</div>
+          <label>
+            만료일 (선택)
+            <input id="key-expiry" type="datetime-local">
+          </label>
+          <div class="inline-hint">기본 만료일은 발급일 기준 3개월 후입니다.</div>
+          <div class="actions">
+            <button class="primary" id="create-key-button" type="submit">새 API 키 발급</button>
+          </div>
+        </form>
+        <div id="create-key-result" class="status" style="display:none; margin-top:14px;">
+          <div id="create-key-result-title" class="status-title"></div>
+          <div id="create-key-secret" class="secret-box" style="display:none;"></div>
+          <div class="actions" style="margin-top:10px;">
+            <button class="secondary" id="copy-key-button" type="button" style="display:none;">키 복사</button>
+          </div>
+          <div id="create-key-result-message"></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>발급된 API 키</h2>
+        <div id="api-keys" class="list"></div>
+      </section>
+
+      <section class="card">
+        <h2>최근 사용 로그</h2>
+        <div id="audit-logs" class="list"></div>
+      </section>
+    </div>
+  </main>
+
+  <script src="./app-config.js"></script>
+  <script type="module" src="./account.js"></script>
+</body>
+</html>

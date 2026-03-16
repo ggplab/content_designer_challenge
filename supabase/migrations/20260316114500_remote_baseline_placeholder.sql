@@ -1,0 +1,2 @@
+-- Placeholder to align local migration history with the existing remote database.
+-- The original migration file was not present in this repository.

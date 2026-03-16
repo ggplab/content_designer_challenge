@@ -2,6 +2,36 @@
 
 ---
 
+## 2026-03-16
+
+### 보안 구조 변경
+- **공개 웹 인증 중단** — 대시보드에서 브라우저가 `web-verify`를 직접 호출하던 기능 제거
+- **API 키 노출 제거** — `web/index.html`에서 공개 API 키, 예제 curl, 복사 UI 제거
+- **인증 UX 변경** — 상단 버튼을 Discord `/인증` 안내 모달로 전환
+
+### `web-verify` 보안 강화
+- **Origin 제한 추가** — `WEB_VERIFY_ALLOWED_ORIGINS` 기반으로 허용 도메인만 CORS 응답
+- **요청 빈도 제한 추가** — IP 기준 in-memory rate limit 적용 (`WEB_VERIFY_RATE_LIMIT_WINDOW_MS`, `WEB_VERIFY_RATE_LIMIT_MAX`)
+- **URL allowlist 적용** — LinkedIn, Instagram, Threads, YouTube, TikTok, Brunch 및 등록된 블로그 계열만 허용
+- **로컬 공개 클라이언트 차단** — 정적 사이트/문서에 `Authorization: Bearer ...` 형태 키를 싣지 않는 구조로 정리
+
+### 문서 정리
+- **README 갱신** — Discord 인증 중심 구조, 서버 전용 `web-verify`, 신규 시크릿 설정 반영
+- **CONTRIBUTING 갱신** — 협업자용 보안 원칙, `WEB_VERIFY_*` 환경변수, 장애 대응 항목 추가
+- **웹 로그인/API 키 설계 문서 추가** — `docs/web-auth-api-key-plan.md`
+
+### 인증 기반 작업 시작
+- **계정 페이지 추가** — `web/account.html`, `web/account.js`, `web/app-config.js`
+- **API 키 관리 함수 추가** — `create-api-key`, `list-api-keys`, `revoke-api-key`
+- **DB 마이그레이션 추가** — `member_profiles`, `api_keys`, `api_audit_logs` 및 RLS 정책
+- **`web-verify` 인증 모델 전환 시작** — 세션 또는 사용자별 키 기반 식별, 감사 로그 기록
+
+### 운영 메모
+- 기존에 노출됐던 `WEB_VERIFY_API_KEY`는 반드시 폐기 후 재발급 필요
+- `web-verify`는 이제 참가자용 공개 UI가 아니라 서버 대 서버 자동화 전용 엔드포인트
+
+---
+
 ## 2026-03-13
 
 ### 멤버 변경사항

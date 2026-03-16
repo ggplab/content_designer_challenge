@@ -6,7 +6,7 @@
 
 ## 프로젝트 한 줄 요약
 
-Discord `/인증` 슬래시 커맨드로 챌린지 참가자가 콘텐츠 링크를 제출하면, 자동으로 Google Sheets에 기록하고 Discord에 완료 메시지를 보내는 봇 시스템입니다.
+Discord `/인증` 슬래시 커맨드로 챌린지 참가자가 콘텐츠 링크를 제출하면, 자동으로 Google Sheets에 기록하고 Discord에 완료 메시지를 보내는 봇 시스템입니다. 공개 대시보드는 GitHub Pages에서 정적으로 배포됩니다.
 
 ---
 
@@ -27,6 +27,8 @@ Discord `/인증` 슬래시 커맨드로 챌린지 참가자가 콘텐츠 링크
              └── sendFollowup()      — Discord 완료 메시지 전송
 ```
 
+보안상 공개 웹페이지에서 `web-verify`를 직접 호출하는 방식은 중단했습니다. `web-verify`는 서버 대 서버 자동화 전용으로만 유지합니다.
+
 ### 핵심 설계 원칙
 
 - **3초 제한 대응**: Discord는 인터랙션 응답을 3초 안에 받아야 합니다. 모달 제출 시 `{"type":5}`로 즉시 응답하고, 실제 처리는 `EdgeRuntime.waitUntil()`로 백그라운드에서 실행합니다.
@@ -40,6 +42,7 @@ Discord `/인증` 슬래시 커맨드로 챌린지 참가자가 콘텐츠 링크
 | 계층 | 기술 |
 |------|------|
 | Edge Function | Deno (TypeScript), Supabase Functions |
+| Dashboard | GitHub Pages, 정적 HTML/JS |
 | 서명 검증 | Ed25519 (Web Crypto API) |
 | URL 요약 | OG 태그 파싱 → Gemini 2.5 Flash fallback |
 | 데이터 저장 | Google Sheets v4 API (Service Account) |
@@ -105,10 +108,21 @@ supabase link --project-ref tcxtcacibgoancvoiybx
 ```bash
 supabase secrets set DISCORD_PUBLIC_KEY=<받은_값>
 supabase secrets set DISCORD_APPLICATION_ID=1474072217447829514
+supabase secrets set DISCORD_BOT_TOKEN=<받은_값>
 supabase secrets set GEMINI_API_KEY=<받은_값>
 supabase secrets set GOOGLE_SHEET_ID=1CKyVexXErtbkAVm6I-30fh3tei6J4B9HtCjq0-fmvvU
 supabase secrets set GCP_SERVICE_ACCOUNT_JSON=<받은_값>
+supabase secrets set WEB_VERIFY_API_KEY=<받은_값>
+supabase secrets set WEB_VERIFY_ALLOWED_ORIGINS=https://content.ggplab.xyz,https://ggplab.github.io,http://localhost:4173
+supabase secrets set WEB_VERIFY_RATE_LIMIT_WINDOW_MS=600000
+supabase secrets set WEB_VERIFY_RATE_LIMIT_MAX=20
 ```
+
+`WEB_VERIFY_API_KEY`는 브라우저 코드, 정적 HTML, 공개 문서, 예제 curl에 넣지 않습니다.
+이 키는 서버 환경 변수 또는 비밀 저장소에서만 읽어야 합니다.
+`web/app-config.js`에는 Supabase URL과 publishable key만 설정합니다.
+로그인 후 `account.html`에서 본인 참가자 이름을 직접 연결할 수 있습니다.
+배포 순서는 `docs/auth-deploy-checklist.md`를 기준으로 진행하세요.
 
 ---
 
@@ -116,6 +130,10 @@ supabase secrets set GCP_SERVICE_ACCOUNT_JSON=<받은_값>
 
 ```bash
 supabase functions deploy discord-verify \
+  --project-ref tcxtcacibgoancvoiybx \
+  --no-verify-jwt
+
+supabase functions deploy web-verify \
   --project-ref tcxtcacibgoancvoiybx \
   --no-verify-jwt
 ```
@@ -161,6 +179,9 @@ chore:  빌드/설정 변경
 | Sheets 저장 안 됨 | Service Account 권한 없음 | Sheets 공유에 SA 이메일을 편집자로 추가 |
 | follow-up 메시지 없음 | interaction token 만료(15분) | Supabase 로그 확인: `supabase functions logs discord-verify` |
 | 모달이 뜨지 않음 | Interactions Endpoint 미연결 | Discord Dev Portal에서 URL 재등록 |
+| web-verify 403 | 허용되지 않은 Origin 또는 등록되지 않은 이름 | `WEB_VERIFY_ALLOWED_ORIGINS`, 참가자 목록 확인 |
+| web-verify 429 | 요청 과다 | `WEB_VERIFY_RATE_LIMIT_*` 설정 또는 호출 빈도 조정 |
+| web-verify 400 | 허용되지 않은 URL 도메인 | LinkedIn, Instagram, Threads, YouTube, TikTok, Brunch, 등록된 블로그 도메인만 사용 |
 
 ---
 
@@ -178,9 +199,23 @@ supabase functions logs discord-verify --project-ref tcxtcacibgoancvoiybx
 content_designer_challenge/
 ├── supabase/
 │   ├── functions/
-│   │   └── discord-verify/
-│   │       └── index.ts          ← 핵심 Edge Function 코드
+│   │   ├── discord-verify/
+│   │   │   └── index.ts          ← Discord 인터랙션 처리
+│   │   ├── web-verify/
+│   │   │   └── index.ts          ← 서버 전용 자동화 엔드포인트
+│   │   ├── claim-member-profile/
+│   │   ├── create-api-key/
+│   │   ├── list-api-keys/
+│   │   └── revoke-api-key/
+│   ├── migrations/
 │   └── config.toml
+├── web/
+│   ├── account.html              ← 로그인 / API 키 관리 페이지
+│   ├── account.js
+│   ├── app-config.js             ← Supabase 공개 설정
+│   ├── index.html                ← 공개 대시보드
+│   ├── dashboard-data.js
+│   └── members.json
 ├── docs/
 │   ├── supabase-edge-function-discord-guide.md
 │   ├── google_sheets_schema.md
@@ -203,6 +238,8 @@ content_designer_challenge/
 - API 키, 토큰, SA JSON을 코드에 하드코딩하지 마세요.
 - 모든 민감 정보는 `supabase secrets set`으로만 관리합니다.
 - 키가 실수로 노출되었다면 즉시 폐기하고 재발급하세요.
+- 공개 웹페이지에서 인증 요청을 직접 보내지 마세요. 참가자 인증은 Discord `/인증`만 사용합니다.
+- `web-verify`는 서버 대 서버 호출만 허용합니다. Origin 제한, rate limit, URL allowlist를 우회하려고 하지 마세요.
 
 ---
 

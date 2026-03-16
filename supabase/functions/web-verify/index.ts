@@ -1,18 +1,51 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
+import {
+  createAdminClient,
+  getBearerToken,
+  getSessionUser,
+  sha256Hex,
+} from "../_shared/auth.ts";
+
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")!;
 const GOOGLE_SHEET_ID = Deno.env.get("GOOGLE_SHEET_ID")!;
 const GCP_SERVICE_ACCOUNT_JSON = Deno.env.get("GCP_SERVICE_ACCOUNT_JSON")!;
 const DISCORD_BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN")!;
 const DISCORD_CHANNEL_ID = "1473868708261658695"; // #챌린지-인증
-const WEB_VERIFY_API_KEY = Deno.env.get("WEB_VERIFY_API_KEY")!;
-
-// 등록된 참가자 목록 (닉네임 포함)
-const VALID_NAMES = new Set([
-  "신지혜", "서영학", "박수빈", "송치오", "남희정",
-  "신예린", "김한솔", "박정현", "정윤영", "임정",
-  "강예정", "김희은", "지정수", "이인영", "팝콘",
-]);
+const DEFAULT_ALLOWED_ORIGINS = [
+  "https://content.ggplab.xyz",
+  "https://ggplab.github.io",
+  "http://localhost:4173",
+];
+const ALLOWED_ORIGINS = new Set(
+  (Deno.env.get("WEB_VERIFY_ALLOWED_ORIGINS") ?? DEFAULT_ALLOWED_ORIGINS.join(","))
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+);
+const RATE_LIMIT_WINDOW_MS = Number(
+  Deno.env.get("WEB_VERIFY_RATE_LIMIT_WINDOW_MS") ?? "600000"
+);
+const RATE_LIMIT_MAX = Number(
+  Deno.env.get("WEB_VERIFY_RATE_LIMIT_MAX") ?? "20"
+);
+const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
+const ALLOWED_HOST_SUFFIXES = [
+  "linkedin.com",
+  "instagram.com",
+  "threads.net",
+  "threads.com",
+  "youtube.com",
+  "youtu.be",
+  "tiktok.com",
+  "brunch.co.kr",
+  "medium.com",
+  "substack.com",
+  "tistory.com",
+  "velog.io",
+  "blog.naver.com",
+  "github.io",
+];
 
 // ── 유틸 ──────────────────────────────────────────────────────────────────────
 
@@ -52,6 +85,217 @@ function detectPlatform(url: string): string {
   if (u.includes("tiktok.com")) return "TikTok";
   if (u.includes("brunch.co.kr")) return "Brunch";
   return "Blog";
+}
+
+function getClientIp(req: Request): string {
+  const forwardedFor = req.headers.get("x-forwarded-for");
+  if (forwardedFor) {
+    return forwardedFor.split(",")[0]?.trim() || "unknown";
+  }
+  return req.headers.get("cf-connecting-ip") ?? "unknown";
+}
+
+function isOriginAllowed(origin: string | null): boolean {
+  if (!origin) return true;
+  return ALLOWED_ORIGINS.has(origin);
+}
+
+function buildCorsHeaders(origin: string | null): HeadersInit {
+  const headers: Record<string, string> = {
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-key",
+    "Vary": "Origin",
+  };
+  if (origin && isOriginAllowed(origin)) {
+    headers["Access-Control-Allow-Origin"] = origin;
+  }
+  return headers;
+}
+
+function jsonResponse(
+  origin: string | null,
+  body: Record<string, unknown>,
+  status = 200,
+  extraHeaders: Record<string, string> = {},
+): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      ...buildCorsHeaders(origin),
+      "Content-Type": "application/json",
+      ...extraHeaders,
+    },
+  });
+}
+
+function isPrivateIpv4(hostname: string): boolean {
+  if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)) return false;
+  const parts = hostname.split(".").map(Number);
+  if (parts.some((part) => Number.isNaN(part) || part < 0 || part > 255)) return true;
+  return (
+    parts[0] === 10 ||
+    parts[0] === 127 ||
+    (parts[0] === 169 && parts[1] === 254) ||
+    (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) ||
+    (parts[0] === 192 && parts[1] === 168)
+  );
+}
+
+function isBlockedHostname(hostname: string): boolean {
+  const host = hostname.toLowerCase();
+  return (
+    host === "localhost" ||
+    host.endsWith(".local") ||
+    host.endsWith(".internal") ||
+    host.endsWith(".home.arpa") ||
+    host === "::1" ||
+    isPrivateIpv4(host)
+  );
+}
+
+function isAllowedContentUrl(rawUrl: string): boolean {
+  try {
+    const url = new URL(rawUrl);
+    if (!["http:", "https:"].includes(url.protocol)) return false;
+    const host = url.hostname.toLowerCase();
+    if (isBlockedHostname(host)) return false;
+    return ALLOWED_HOST_SUFFIXES.some((suffix) => host === suffix || host.endsWith(`.${suffix}`));
+  } catch {
+    return false;
+  }
+}
+
+function checkRateLimit(clientIp: string): { limited: boolean; retryAfter: number } {
+  const now = Date.now();
+  const existing = rateLimitStore.get(clientIp);
+  if (!existing || existing.resetAt <= now) {
+    rateLimitStore.set(clientIp, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return { limited: false, retryAfter: 0 };
+  }
+  existing.count += 1;
+  if (existing.count > RATE_LIMIT_MAX) {
+    return {
+      limited: true,
+      retryAfter: Math.max(1, Math.ceil((existing.resetAt - now) / 1000)),
+    };
+  }
+  return { limited: false, retryAfter: 0 };
+}
+
+type AuthContext = {
+  authType: "session" | "api_key";
+  userId: string;
+  challengeName: string;
+  isActive: boolean;
+  apiKeyId: string | null;
+};
+
+async function resolveAuthContext(req: Request): Promise<AuthContext | null> {
+  const admin = createAdminClient();
+  const sessionUser = await getSessionUser(req);
+
+  if (sessionUser) {
+    const { data: profile, error } = await admin
+      .from("member_profiles")
+      .select("user_id, challenge_name, is_active")
+      .eq("user_id", sessionUser.id)
+      .maybeSingle();
+
+    if (error) {
+      console.error("member_profiles lookup failed:", error);
+      return null;
+    }
+    if (!profile) return null;
+
+    return {
+      authType: "session",
+      userId: sessionUser.id,
+      challengeName: profile.challenge_name,
+      isActive: profile.is_active,
+      apiKeyId: null,
+    };
+  }
+
+  const token = getBearerToken(req);
+  if (!token) return null;
+
+  const tokenHash = await sha256Hex(token);
+  const { data: apiKey, error: apiKeyError } = await admin
+    .from("api_keys")
+    .select("id, user_id, expires_at, revoked_at")
+    .eq("key_hash", tokenHash)
+    .is("revoked_at", null)
+    .maybeSingle();
+
+  if (apiKeyError) {
+    console.error("api_keys lookup failed:", apiKeyError);
+    return null;
+  }
+  if (!apiKey) return null;
+  if (apiKey.expires_at && new Date(apiKey.expires_at).getTime() <= Date.now()) {
+    return null;
+  }
+
+  const { data: profile, error: profileError } = await admin
+    .from("member_profiles")
+    .select("challenge_name, is_active")
+    .eq("user_id", apiKey.user_id)
+    .maybeSingle();
+
+  if (profileError) {
+    console.error("member_profiles lookup failed:", profileError);
+    return null;
+  }
+  if (!profile) return null;
+
+  return {
+    authType: "api_key",
+    userId: apiKey.user_id,
+    challengeName: profile.challenge_name,
+    isActive: profile.is_active,
+    apiKeyId: apiKey.id,
+  };
+}
+
+async function insertAuditLog(
+  req: Request,
+  statusCode: number,
+  errorCode: string | null,
+  requestName: string | null,
+  authContext: AuthContext | null
+): Promise<void> {
+  try {
+    const admin = createAdminClient();
+    const forwardedFor = req.headers.get("x-forwarded-for");
+    const ipAddress = forwardedFor?.split(",")[0]?.trim()
+      || req.headers.get("cf-connecting-ip")
+      || null;
+    await admin.from("api_audit_logs").insert({
+      user_id: authContext?.userId ?? null,
+      api_key_id: authContext?.apiKeyId ?? null,
+      request_name: requestName,
+      ip_address: ipAddress,
+      origin: req.headers.get("Origin"),
+      user_agent: req.headers.get("User-Agent"),
+      status_code: statusCode,
+      error_code: errorCode,
+    });
+  } catch (error) {
+    console.error("api_audit_logs insert failed:", error);
+  }
+}
+
+async function touchApiKey(apiKeyId: string | null): Promise<void> {
+  if (!apiKeyId) return;
+  try {
+    const admin = createAdminClient();
+    await admin
+      .from("api_keys")
+      .update({ last_used_at: new Date().toISOString() })
+      .eq("id", apiKeyId);
+  } catch (error) {
+    console.error("api_keys last_used_at update failed:", error);
+  }
 }
 
 // ── OG 태그 파싱 ──────────────────────────────────────────────────────────────
@@ -240,50 +484,86 @@ async function sendDiscordMessage(content: string): Promise<void> {
 
 // ── CORS 헤더 ─────────────────────────────────────────────────────────────────
 
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-key",
-};
-
-// ── 메인 ─────────────────────────────────────────────────────────────────────
-
 Deno.serve(async (req: Request) => {
+  const origin = req.headers.get("Origin");
+  if (!isOriginAllowed(origin)) {
+    return jsonResponse(origin, { error: "허용되지 않은 Origin입니다." }, 403);
+  }
+
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: CORS });
+    return new Response(null, { headers: buildCorsHeaders(origin) });
   }
   if (req.method !== "POST") {
     return new Response("Method Not Allowed", { status: 405 });
   }
 
-  // API 키 검증
-  const authHeader = req.headers.get("Authorization") ?? req.headers.get("x-api-key") ?? "";
-  const apiKey = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader;
-  if (!apiKey || apiKey !== WEB_VERIFY_API_KEY) {
-    return new Response(JSON.stringify({ error: "인증되지 않은 요청입니다." }), {
-      status: 401,
-      headers: { ...CORS, "Content-Type": "application/json" },
-    });
+  const clientIp = getClientIp(req);
+  const rateLimit = checkRateLimit(`ip:${clientIp}`);
+  if (rateLimit.limited) {
+    await insertAuditLog(req, 429, "rate_limited_ip", null, null);
+    return jsonResponse(
+      origin,
+      { error: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요." },
+      429,
+      { "Retry-After": String(rateLimit.retryAfter) }
+    );
   }
 
   let name: string, links: string[], isPublic: boolean;
   try {
     const body = await req.json();
     name = (body.name ?? body.nickname ?? "").trim(); // nickname은 하위 호환
-    links = (body.links ?? []).map((l: string) => l.trim()).filter((l: string) => l.startsWith("http"));
+    links = (body.links ?? [])
+      .map((l: string) => l.trim())
+      .filter((l: string) => isAllowedContentUrl(l))
+      .slice(0, 5);
     isPublic = body.isPublic !== false;
   } catch {
-    return new Response(JSON.stringify({ error: "잘못된 요청 형식입니다." }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+    await insertAuditLog(req, 400, "invalid_json", null, null);
+    return jsonResponse(origin, { error: "잘못된 요청 형식입니다." }, 400);
   }
 
-  if (!name) {
-    return new Response(JSON.stringify({ error: "이름을 입력해주세요." }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+  const authContext = await resolveAuthContext(req);
+  if (!authContext) {
+    await insertAuditLog(req, 401, "auth_required", name || null, null);
+    return jsonResponse(origin, { error: "로그인 세션 또는 사용자별 API 키가 필요합니다." }, 401);
   }
-  if (!VALID_NAMES.has(name)) {
-    return new Response(JSON.stringify({ error: `등록되지 않은 참가자입니다: ${name}` }), { status: 403, headers: { ...CORS, "Content-Type": "application/json" } });
+  if (!authContext.isActive) {
+    await insertAuditLog(req, 403, "inactive_member", name || null, authContext);
+    return jsonResponse(origin, { error: "활성 참가자 계정만 인증할 수 있습니다." }, 403);
   }
+
+  const userRateLimit = checkRateLimit(`user:${authContext.userId}`);
+  if (userRateLimit.limited) {
+    await insertAuditLog(req, 429, "rate_limited_user", name || null, authContext);
+    return jsonResponse(
+      origin,
+      { error: "해당 계정의 요청이 너무 많습니다. 잠시 후 다시 시도해주세요." },
+      429,
+      { "Retry-After": String(userRateLimit.retryAfter) }
+    );
+  }
+
+  if (name && name !== authContext.challengeName) {
+    await insertAuditLog(req, 403, "name_mismatch", name, authContext);
+    return jsonResponse(
+      origin,
+      { error: `본인 이름으로만 인증할 수 있습니다: ${authContext.challengeName}` },
+      403
+    );
+  }
+
+  name = authContext.challengeName;
+
   if (links.length === 0) {
-    return new Response(JSON.stringify({ error: "유효한 URL이 없습니다. http로 시작하는 링크를 입력해주세요." }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+    await insertAuditLog(req, 400, "invalid_link", name, authContext);
+    return jsonResponse(
+      origin,
+      {
+        error: "허용된 플랫폼 URL이 없습니다. LinkedIn, Instagram, Threads, YouTube, TikTok, Brunch 및 등록된 블로그 도메인만 지원합니다.",
+      },
+      400
+    );
   }
 
   const today = getTodayKST();
@@ -294,7 +574,8 @@ Deno.serve(async (req: Request) => {
     accessToken = await getGoogleAccessToken();
   } catch (e) {
     console.error("Google 인증 실패:", e);
-    return new Response(JSON.stringify({ error: "Google 인증 오류가 발생했습니다." }), { status: 500, headers: { ...CORS, "Content-Type": "application/json" } });
+    await insertAuditLog(req, 500, "google_auth_failed", name, authContext);
+    return jsonResponse(origin, { error: "Google 인증 오류가 발생했습니다." }, 500);
   }
 
   const { userCount, totalCount } = await getWeekCounts(accessToken, name, weekLabel);
@@ -320,7 +601,8 @@ Deno.serve(async (req: Request) => {
   }
 
   if (results.length === 0) {
-    return new Response(JSON.stringify({ error: "저장 중 오류가 발생했습니다." }), { status: 500, headers: { ...CORS, "Content-Type": "application/json" } });
+    await insertAuditLog(req, 500, "sheets_write_failed", name, authContext);
+    return jsonResponse(origin, { error: "저장 중 오류가 발생했습니다." }, 500);
   }
 
   // Discord #챌린지-인증 채널에 메시지 전송
@@ -338,8 +620,8 @@ Deno.serve(async (req: Request) => {
     }
   }
   await sendDiscordMessage(msg.trim());
+  await touchApiKey(authContext.apiKeyId);
+  await insertAuditLog(req, 200, null, name, authContext);
 
-  return new Response(JSON.stringify({ ok: true, weekLabel, results }), {
-    headers: { ...CORS, "Content-Type": "application/json" },
-  });
+  return jsonResponse(origin, { ok: true, weekLabel, results });
 });
