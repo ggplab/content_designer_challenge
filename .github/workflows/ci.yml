@@ -16,6 +16,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - name: Validate JSON files
         shell: bash
         run: |
@@ -34,6 +39,9 @@ jobs:
         uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+
+      - name: Run dashboard unit tests
+        run: node --test tests/dashboard-data.test.js
 
       - name: Type check Supabase Edge Functions
         run: |

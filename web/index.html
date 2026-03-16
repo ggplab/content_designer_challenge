@@ -355,6 +355,7 @@
     <div id="timeline"><div class="loading">불러오는 중...</div></div>
   </div>
 
+  <script src="./dashboard-data.js"></script>
   <script>
     // ── API 연동 모달 ──
     function openApiModal() {
@@ -558,6 +559,12 @@
       }
     }
 
+    function mergeParticipantsFromSurvey(surveyData) {
+      const result = window.DashboardData.mergeParticipantsFromSurvey(ALL_PARTICIPANTS, surveyData, NICKNAME_MAP);
+      ALL_PARTICIPANTS = result.participants;
+      MEMBER_LINKS = { ...MEMBER_LINKS, ...result.memberLinks };
+    }
+
     function getCurrentWeek() {
       const now = new Date();
       const days = Math.floor((now - CHALLENGE_START) / 86400000);
@@ -720,10 +727,11 @@
 
     function renderProfiles(surveyData, rows) {
       const el = document.getElementById('profiles');
-      const surveyNames = new Set(surveyData.map(p => p.name));
+      const normalizedSurveyData = window.DashboardData.mergeSurveyProfiles(surveyData, MEMBER_LINKS, NICKNAME_MAP);
+      const surveyNames = new Set(normalizedSurveyData.map(p => p.name));
 
       // 설문 작성 멤버 카드
-      const surveyCards = surveyData.map(p => {
+      const surveyCards = normalizedSurveyData.map(p => {
         const memberLinks = MEMBER_LINKS[p.name] || {};
         const mergedLinks = { ...memberLinks, ...p.links };
         const surveyTags = p.platforms.split(/[,、]/).map(t => t.trim()).filter(Boolean);
@@ -826,6 +834,7 @@
       try {
         await fetchMembers();
         const [rows, survey] = await Promise.all([fetchSheetData(), fetchSurveyData()]);
+        mergeParticipantsFromSurvey(survey);
         renderStats(rows);
         renderLeaderboard(rows);
         renderProfiles(survey, rows);
