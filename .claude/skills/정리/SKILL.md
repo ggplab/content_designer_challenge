@@ -4,7 +4,7 @@ description: 이번 대화에서 진행한 작업을 update.md에 기록하고, 
 disable-model-invocation: true
 ---
 
-이번 대화에서 진행한 작업 내용을 `update.md`에 업데이트하고, 아키텍처 변경이 있으면 `docs/architecture.md`도 갱신하고, Discord #업데이트 채널에도 알려줘.
+이번 대화에서 진행한 작업 내용을 `changelog/YYYY-MM-DD.md`에 기록하고 `update.md` 목록에 링크를 추가하고, 아키텍처 변경이 있으면 `docs/architecture.md`도 갱신하고, Discord #업데이트 채널에도 알려줘.
 
 참고 문서:
 - `docs/discord-update-history-playbook.md`
@@ -30,43 +30,21 @@ disable-model-invocation: true
 
 아키텍처 변경이 없는 순수 문서·설정 작업이면 이 단계를 건너뛴다.
 
-### 1. update.md 업데이트
+### 1. changelog 업데이트
 
-- 오늘 날짜(`## YYYY-MM-DD`) 섹션을 확인
-  - **섹션이 없으면**: 맨 위에 새로 추가
-  - **섹션이 있으면**: 기존 섹션 전체를 읽고, 이번 작업 내용을 **카테고리별로 통합**하여 섹션을 하나로 교체
-    - 기존 항목과 새 항목을 같은 카테고리 아래 합쳐서 중복 없이 정리
-    - 섹션을 위아래로 늘리거나 `(2차)` 같은 접미사를 붙이지 않음
+- `changelog/YYYY-MM-DD.md` 파일을 확인
+  - **파일이 없으면**: 신규 생성. 상단에 `# YYYY-MM-DD` 헤딩 추가
+  - **파일이 있으면**: 기존 내용을 읽고 이번 작업 내용을 **카테고리별로 통합** (중복 없이, `(2차)` 접미사 없이)
 - 작업 내용을 카테고리별로 정리 (변경사항, 신규 기능, 버그 수정, 멤버 변경 등)
-- 기술적인 세부사항도 포함 (어떤 파일이 왜 변경됐는지)
+- 기술적인 세부사항 포함 (어떤 파일이 왜 변경됐는지)
+- `update.md` 목록에 오늘 날짜 행이 없으면 추가 (있으면 주요 내용만 업데이트)
+- 해결된 버그가 있으면 `bugs/open/` → `bugs/closed/`로 이동
 - 작성 완료 후 아래 스크립트로 커밋·푸시:
   ```bash
   bash ${CLAUDE_SKILL_DIR}/scripts/git-push.sh "docs: update YYYY-MM-DD release notes"
   ```
 
-### 2. Discord 채널에서 오늘 메시지 조회
-
-Bot API로 채널 최근 메시지를 가져와 오늘 날짜(`YYYY-MM-DD`)가 포함된 메시지를 찾는다.
-
-```bash
-source .env && curl -s "https://discord.com/api/v10/channels/1480426873963151501/messages?limit=10" \
-  -H "Authorization: Bot $DISCORD_BOT_TOKEN" | python3 -c "
-import sys, json
-today = 'YYYY-MM-DD'  # 오늘 날짜로 교체
-msgs = json.load(sys.stdin)
-for m in msgs:
-    if today in m.get('content', ''):
-        print(m['id'])
-        break
-else:
-    print('none')
-"
-```
-
-- **message_id가 반환되면** → 기존 메시지 수정 (PATCH)
-- **'none'이면** → 새 메시지 전송 (POST)
-
-### 3. Discord 메시지 내용 작성 후 스크립트로 전송
+### 2. Discord 메시지 내용 작성 후 스크립트로 전송
 
 update.md의 **오늘 날짜 섹션 전체**를 기반으로 메시지를 작성하고 `/tmp/discord_msg.txt`에 저장한다.
 (당일 2회 이상 정리 시 누적된 내용 전체가 반영되어야 함)
