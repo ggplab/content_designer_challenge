@@ -39,8 +39,10 @@ disable-model-invocation: true
     - 섹션을 위아래로 늘리거나 `(2차)` 같은 접미사를 붙이지 않음
 - 작업 내용을 카테고리별로 정리 (변경사항, 신규 기능, 버그 수정, 멤버 변경 등)
 - 기술적인 세부사항도 포함 (어떤 파일이 왜 변경됐는지)
-- 작성 후 `git add update.md docs/architecture.md && git commit && git push`까지 완료
-  - `docs/architecture.md`를 수정하지 않았으면 `git add update.md`만
+- 작성 완료 후 아래 스크립트로 커밋·푸시:
+  ```bash
+  bash ${CLAUDE_SKILL_DIR}/scripts/git-push.sh "docs: update YYYY-MM-DD release notes"
+  ```
 
 ### 2. Discord 채널에서 오늘 메시지 조회
 
@@ -64,9 +66,9 @@ else:
 - **message_id가 반환되면** → 기존 메시지 수정 (PATCH)
 - **'none'이면** → 새 메시지 전송 (POST)
 
-### 3. Discord 메시지 내용 작성
+### 3. Discord 메시지 내용 작성 후 스크립트로 전송
 
-update.md의 **오늘 날짜 섹션 전체**를 기반으로 메시지 작성.
+update.md의 **오늘 날짜 섹션 전체**를 기반으로 메시지를 작성하고 `/tmp/discord_msg.txt`에 저장한다.
 (당일 2회 이상 정리 시 누적된 내용 전체가 반영되어야 함)
 
 **메시지 형식**:
@@ -86,36 +88,9 @@ update.md의 **오늘 날짜 섹션 전체**를 기반으로 메시지 작성.
 - 해당 날짜에 작업한 내용만 포함 (카테고리가 없으면 생략)
 - 각 항목은 간결하게 1줄로
 - 기술 용어보다 사용자 관점으로 작성
+- 2000자 초과 시 핵심 항목만 요약
 
-### 4-A. 새 메시지 전송 (오늘 처음인 경우)
-
+메시지 작성 완료 후 스크립트로 전송 (POST/PATCH·캐시 관리 자동 처리):
 ```bash
-source .env && RESPONSE=$(curl -s -X POST "${DISCORD_WEBHOOK_UPDATE}?wait=true" \
-  -H "Content-Type: application/json" \
-  -d "{\"content\": \"<메시지 내용>\"}") && echo "$RESPONSE"
+bash ${CLAUDE_SKILL_DIR}/scripts/discord-send.sh < /tmp/discord_msg.txt
 ```
-
-- `?wait=true` 필수 — 응답에서 message_id를 받기 위해
-- 응답 JSON에서 `id` 필드 추출 → `.discord_message_cache.json` 업데이트
-
-응답 JSON에서 `id` 필드를 확인해 성공 여부를 검증한다.
-
-### 4-B. 기존 메시지 수정 (오늘 2회 이상인 경우)
-
-```bash
-source .env && curl -s -X PATCH "${DISCORD_WEBHOOK_UPDATE}/messages/<message_id>" \
-  -H "Content-Type: application/json" \
-  -d "{\"content\": \"<메시지 내용>\"}"
-```
-
-### 5. 결과 확인
-
-- 전송/수정 성공 여부 확인
-- `.discord_message_cache.json`이 올바르게 저장됐는지 확인
-
-## 주의사항
-
-- content 값은 JSON string escape 처리 필수 (큰따옴표 → `\"`, 줄바꿈 → `\n`)
-- `.discord_message_cache.json`은 gitignore에 등록되어 있어야 함 — 없으면 `.gitignore`에 추가
-- 캐시 파일이 없거나 오늘 날짜 키가 없으면 반드시 POST로 신규 전송
-- Discord 메시지 최대 길이 2000자 초과 시 핵심 항목만 요약

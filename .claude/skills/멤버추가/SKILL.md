@@ -35,8 +35,10 @@ disable-model-invocation: true
 3. `nickname_map`에 `"Discord닉네임": "이름"` 추가
 4. 파일 저장
 5. 결과 요약 출력 (추가된 내용 확인)
-6. `git add web/members.json && git commit -m "feat: 멤버 추가 — [이름] ([Discord닉네임])"` 실행
-7. git push
+6. 아래 스크립트로 커밋·푸시:
+   ```bash
+   bash ${CLAUDE_SKILL_DIR}/scripts/git-push.sh "[이름]" "[Discord닉네임]"
+   ```
 
 ## 주의사항
 
