@@ -35,6 +35,11 @@
 - **Supabase 시크릿명 조정** — `SUPABASE_SERVICE_ROLE_KEY` 대신 커스텀 시크릿 `SERVICE_ROLE_KEY`를 사용하도록 코드/문서 수정
 - **공개 가능한 키와 비공개 키 분리 정리** — `app-config.js`에는 publishable key만 두고, service role key와 사용자 API 키는 Edge Function 시크릿으로만 관리
 
+### 버그 수정
+- **Discord `/인증` 모달 간헐적 미표시 수정** — Edge Function 콜드 스타트(Deno 런타임 재부팅)가 Discord 3초 응답 제한을 초과해 모달이 뜨지 않던 문제 해결
+  - `discord-verify`에 GET 헬스체크 엔드포인트 추가 (`index.ts`: GET 요청 시 즉시 `200 OK` 반환)
+  - pg_net · pg_cron 확장 활성화 후 5분마다 워밍업 cron job 등록 (`warmup-discord-verify`, `*/5 * * * *`)
+
 ---
 
 ## 2026-03-16

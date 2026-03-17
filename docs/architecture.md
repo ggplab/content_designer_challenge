@@ -81,13 +81,16 @@ graph TD
 
     subgraph SUPABASE["Supabase (tcxtcacibgoancvoiybx · Tokyo)"]
         subgraph EDGE["Edge Functions (Deno)"]
-            DV["discord-verify\n─────────────\n서명 검증\n모달 처리\n주차 계산\n메달 부여"]
+            DV["discord-verify\n─────────────\nGET 헬스체크\n서명 검증\n모달 처리\n주차 계산\n메달 부여"]
             WV["web-verify\n─────────────\nCORS 검증\nRate Limit\n감사 로그"]
             CLAIM["claim-member-profile\n참가자 이름 연결"]
             CKEY["create-api-key\nAPI 키 발급"]
             LKEY["list-api-keys\n키 목록 조회"]
             RKEY["revoke-api-key\n키 폐기"]
             SHARED["_shared/auth.ts\n공통 인증 유틸"]
+        end
+        subgraph CRON["pg_cron (워밍업)"]
+            WARMUP["warmup-discord-verify\n─────────────\n*/5 * * * *\npg_net.http_get()"]
         end
         subgraph DB["PostgreSQL (RLS 적용)"]
             MP["member_profiles\n─────────────\nuser_id\nchallenge_name\ndisplay_name\ndiscord_user_id\nrole"]
@@ -103,6 +106,9 @@ graph TD
         GM["Gemini 2.5 Flash\nURL 요약 생성"]
         GAUTH["Google OAuth\n(Service Account)"]
     end
+
+    %% Cron → Edge Functions (워밍업)
+    WARMUP -->|"GET /discord-verify\n5분마다"| DV
 
     %% 클라이언트 → Edge Functions
     DISCORD -->|"POST /discord-verify\nEd25519 서명"| DV
