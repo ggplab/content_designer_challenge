@@ -1,3 +1,9 @@
+---
+name: 정리
+description: 이번 대화에서 진행한 작업을 update.md에 기록하고, 아키텍처 변경이 있으면 docs/architecture.md도 갱신하고, Discord #업데이트-이력 채널에 알린다. git push와 Discord 메시지 전송 등 비가역적 작업이 포함되므로 사용자가 명시적으로 호출할 때만 실행한다.
+disable-model-invocation: true
+---
+
 이번 대화에서 진행한 작업 내용을 `update.md`에 업데이트하고, 아키텍처 변경이 있으면 `docs/architecture.md`도 갱신하고, Discord #업데이트 채널에도 알려줘.
 
 참고 문서:

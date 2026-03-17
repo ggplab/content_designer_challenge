@@ -1,3 +1,10 @@
+---
+name: 멤버추가
+description: 새 챌린지 참가자를 web/members.json에 추가하고 git commit·push까지 완료한다. members.json 파일 수정과 git push가 포함되므로 사용자가 명시적으로 호출할 때만 실행한다.
+argument-hint: "[이름] [Discord닉네임] [freq] [플랫폼:URL ...]"
+disable-model-invocation: true
+---
+
 새 챌린지 참가자를 `web/members.json`에 추가하고 git commit까지 완료해줘.
 
 ## 입력 형식
