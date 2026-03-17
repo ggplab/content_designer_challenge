@@ -25,6 +25,12 @@
 - **Discord OAuth Provider 설정 완료** — Supabase Auth와 Discord Developer Portal redirect 설정 반영
 - **웹 공개 설정 반영** — `web/app-config.js`에 Supabase URL/functions URL 및 publishable key 설정
 
+### 개발환경 개선
+- **Claude 스킬 modern 포맷 마이그레이션** — `.claude/commands/*.md` 레거시 포맷을 `.claude/skills/*/SKILL.md` 구조로 전환, YAML 프론트매터(name, description) 추가
+- **사이드이펙트 스킬 보호** — `정리`·`멤버추가` 스킬에 `disable-model-invocation: true` 추가 (git push·Discord 전송을 Claude가 자동 호출하지 못하도록)
+- **결정론적 실행 스크립트 추가** — 각 스킬에 bash 스크립트 분리 (`git-push.sh`, `discord-send.sh`, `run.sh`, `test.ts`) — Claude는 내용 생성만, 기계적 실행은 스크립트로 위임
+- **글로벌 CLAUDE.md에 스킬 작성 규칙 추가** — modern 포맷 강제, 사이드이펙트 플래그 기준 명시
+
 ### 운영 메모
 - **Supabase 시크릿명 조정** — `SUPABASE_SERVICE_ROLE_KEY` 대신 커스텀 시크릿 `SERVICE_ROLE_KEY`를 사용하도록 코드/문서 수정
 - **공개 가능한 키와 비공개 키 분리 정리** — `app-config.js`에는 publishable key만 두고, service role key와 사용자 API 키는 Edge Function 시크릿으로만 관리
