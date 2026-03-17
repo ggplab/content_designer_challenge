@@ -16,6 +16,8 @@
 - **대시보드 진입점 확장** — 메인 페이지에서 계정/API 키 관리 페이지로 이동 버튼 추가 (`web/index.html`)
 - **배포 및 운영 문서 보강** — 웹 로그인/API 키 설계안, 배포 체크리스트, 함수 일괄 배포 스크립트 추가
 - **CI 확장** — 새 Edge Function들(`claim-member-profile`, `create-api-key`, `list-api-keys`, `revoke-api-key`)도 `deno check` 대상에 포함
+- **시스템 아키텍처 다이어그램 추가** — `docs/architecture.md`에 시퀀스·컴포넌트·DB 스키마 Mermaid 다이어그램 작성 및 GitHub 렌더링 확인
+- **README 아키텍처 섹션 개선** — ASCII 텍스트에서 Mermaid 컴포넌트 다이어그램으로 교체, `docs/architecture.md` 링크 추가
 
 ### 인프라
 - **Supabase 원격 DB 반영 완료** — 인증/키 관리 마이그레이션을 원격 프로젝트에 적용
