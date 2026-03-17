@@ -4,21 +4,48 @@
 
 [![CI](https://github.com/ggplab/content_designer_challenge/actions/workflows/ci.yml/badge.svg)](https://github.com/ggplab/content_designer_challenge/actions/workflows/ci.yml)
 
-## 현재 아키텍처
+## 아키텍처
 
-```
-Discord /인증 (슬래시 커맨드)
-  → 모달 팝업 (최대 5개 링크 입력)
-    → Supabase Edge Function (discord-verify)
-        ├── Ed25519 서명 검증
-        ├── Gemini 2.5 Flash — URL 분석 및 요약
-        ├── Google Sheets — 인증 기록 저장
-        └── Discord — 인증 완료 메시지
+> 전체 다이어그램 (시퀀스 · 컴포넌트 · DB 스키마) → **[docs/architecture.md](docs/architecture.md)**
+
+```mermaid
+graph TD
+    subgraph CLIENT
+        DISCORD[Discord 사용자]
+        BROWSER[웹 브라우저]
+    end
+    subgraph PAGES[GitHub Pages]
+        INDEX[index.html 리더보드]
+        ACCOUNT[account.html 계정관리]
+    end
+    subgraph SUPABASE[Supabase · Tokyo]
+        subgraph EDGE[Edge Functions]
+            DV[discord-verify]
+            WV[web-verify]
+            SHARED[_shared/auth.ts]
+        end
+        subgraph DB[PostgreSQL · RLS]
+            MP[member_profiles]
+            AK[api_keys]
+            AL[api_audit_logs]
+        end
+        AUTH[Supabase Auth]
+    end
+    subgraph EXTERNAL[외부 서비스]
+        GS[Google Sheets]
+        GM[Gemini 2.5 Flash]
+    end
+
+    DISCORD -->|Ed25519 서명| DV
+    BROWSER --> ACCOUNT -->|Bearer / API Key| WV
+    DV & WV --> SHARED --> DB & AUTH
+    DV -->|인증 기록 저장| GS
+    DV & WV -->|URL 요약| GM
+    DV -->|PATCH follow-up| DISCORD
 ```
 
-정적 대시보드(`web/`)는 GitHub Pages로 배포되며, 공개용 `members.json`과 공개 게시된 Google Sheets 데이터를 읽어 렌더링합니다.
-웹페이지에서 직접 인증을 제출하는 기능은 보안상 중단했습니다. 참가자는 Discord `#챌린지-인증` 채널에서 `/인증`으로만 제출합니다.
-`web-verify` 함수는 남아 있지만 공개 브라우저용이 아니라 서버 대 서버 자동화 전용입니다.
+정적 대시보드(`web/`)는 GitHub Pages로 배포됩니다. 참가자는 Discord `#챌린지-인증` 채널에서 `/인증`으로만 제출합니다.
+`web-verify`는 공개 브라우저용이 아닌 서버 대 서버 자동화 전용입니다.
 
 ## 챌린지 일정
 
@@ -48,6 +75,7 @@ content_designer_challenge/
 │   ├── dashboard-data.js
 │   └── members.json
 ├── docs/
+│   ├── architecture.md             ← 시스템 아키텍처 다이어그램
 │   ├── supabase-edge-function-discord-guide.md
 │   ├── google_sheets_schema.md
 │   ├── discord_announcement.md
@@ -164,6 +192,7 @@ MIT License. 자세한 내용은 `LICENSE`를 참고하세요.
 
 ## Report
 
+- 시스템 아키텍처 다이어그램: `docs/architecture.md`
 - 기술 작업 리포트 (2026-02-23): `docs/technical_report_2026-02-23.md`
 - 웹 로그인/API 키 설계안: `docs/web-auth-api-key-plan.md`
 - 웹 로그인/API 키 배포 체크리스트: `docs/auth-deploy-checklist.md`
