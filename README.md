@@ -67,8 +67,8 @@ content_designer_challenge/
 |------|-----|
 | Supabase Project | tcxtcacibgoancvoiybx |
 | Edge Function URL | `https://tcxtcacibgoancvoiybx.supabase.co/functions/v1/discord-verify` |
-| Dashboard | `https://content.ggplab.xyz` |
-| Account Page | `https://content.ggplab.xyz/account.html` |
+| Dashboard | `https://ggplab.github.io/content_designer_challenge` |
+| Account Page | `https://ggplab.github.io/content_designer_challenge/account.html` |
 | Discord 서버 ID | 1473868607640305889 |
 | Discord 채널 | #챌린지-인증 (1473868708261658695) |
 | Google Sheet ID | 1CKyVexXErtbkAVm6I-30fh3tei6J4B9HtCjq0-fmvvU |
@@ -106,7 +106,7 @@ supabase secrets set GEMINI_API_KEY=...
 supabase secrets set GOOGLE_SHEET_ID=...
 supabase secrets set GCP_SERVICE_ACCOUNT_JSON=...
 supabase secrets set WEB_VERIFY_API_KEY=...
-supabase secrets set WEB_VERIFY_ALLOWED_ORIGINS=https://content.ggplab.xyz,https://ggplab.github.io,http://localhost:4173
+supabase secrets set WEB_VERIFY_ALLOWED_ORIGINS=https://ggplab.github.io/content_designer_challenge,https://ggplab.github.io,http://localhost:4173
 supabase secrets set WEB_VERIFY_RATE_LIMIT_WINDOW_MS=600000
 supabase secrets set WEB_VERIFY_RATE_LIMIT_MAX=20
 ```

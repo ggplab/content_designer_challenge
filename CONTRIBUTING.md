@@ -113,7 +113,7 @@ supabase secrets set GEMINI_API_KEY=<받은_값>
 supabase secrets set GOOGLE_SHEET_ID=1CKyVexXErtbkAVm6I-30fh3tei6J4B9HtCjq0-fmvvU
 supabase secrets set GCP_SERVICE_ACCOUNT_JSON=<받은_값>
 supabase secrets set WEB_VERIFY_API_KEY=<받은_값>
-supabase secrets set WEB_VERIFY_ALLOWED_ORIGINS=https://content.ggplab.xyz,https://ggplab.github.io,http://localhost:4173
+supabase secrets set WEB_VERIFY_ALLOWED_ORIGINS=https://ggplab.github.io/content_designer_challenge,https://ggplab.github.io,http://localhost:4173
 supabase secrets set WEB_VERIFY_RATE_LIMIT_WINDOW_MS=600000
 supabase secrets set WEB_VERIFY_RATE_LIMIT_MAX=20
 ```

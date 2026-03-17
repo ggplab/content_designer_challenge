@@ -305,7 +305,7 @@
 ## 실제 적용 체크리스트
 
 1. Supabase Dashboard에서 Discord OAuth provider를 활성화한다.
-2. Redirect URL에 `https://content.ggplab.xyz/account.html`과 로컬 테스트 URL을 등록한다.
+2. Redirect URL에 `https://ggplab.github.io/content_designer_challenge/account.html`과 로컬 테스트 URL을 등록한다.
 3. SQL Editor 또는 CLI로 `supabase/migrations/20260316143000_web_auth_api_keys.sql`을 적용한다.
 4. Edge Function 시크릿에 아래 값을 추가한다.
    - 기본 제공 `SUPABASE_URL`

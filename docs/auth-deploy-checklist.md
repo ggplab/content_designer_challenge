@@ -12,7 +12,7 @@ Supabase Dashboard에서:
 
 권장 Redirect URL:
 
-- `https://content.ggplab.xyz/account.html`
+- `https://ggplab.github.io/content_designer_challenge/account.html`
 - `http://localhost:4173/account.html`
 
 ## 2. Discord Developer Portal 설정
@@ -54,7 +54,7 @@ supabase secrets set GEMINI_API_KEY=<GEMINI_API_KEY>
 supabase secrets set GOOGLE_SHEET_ID=1CKyVexXErtbkAVm6I-30fh3tei6J4B9HtCjq0-fmvvU
 supabase secrets set GCP_SERVICE_ACCOUNT_JSON=<MINIFIED_SERVICE_ACCOUNT_JSON>
 
-supabase secrets set WEB_VERIFY_ALLOWED_ORIGINS=https://content.ggplab.xyz,https://ggplab.github.io,http://localhost:4173
+supabase secrets set WEB_VERIFY_ALLOWED_ORIGINS=https://ggplab.github.io/content_designer_challenge,https://ggplab.github.io,http://localhost:4173
 supabase secrets set WEB_VERIFY_RATE_LIMIT_WINDOW_MS=600000
 supabase secrets set WEB_VERIFY_RATE_LIMIT_MAX=20
 ```
@@ -106,8 +106,8 @@ window.APP_CONFIG = {
 
 확인 경로:
 
-- `https://content.ggplab.xyz`
-- `https://content.ggplab.xyz/account.html`
+- `https://ggplab.github.io/content_designer_challenge`
+- `https://ggplab.github.io/content_designer_challenge/account.html`
 
 ## 8. 스모크 테스트
 

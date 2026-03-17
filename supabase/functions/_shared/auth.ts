@@ -1,7 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const DEFAULT_ALLOWED_ORIGINS = [
-  "https://content.ggplab.xyz",
   "https://ggplab.github.io",
   "http://localhost:4173",
 ];

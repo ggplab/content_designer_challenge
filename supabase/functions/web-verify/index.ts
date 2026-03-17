@@ -13,7 +13,6 @@ const GCP_SERVICE_ACCOUNT_JSON = Deno.env.get("GCP_SERVICE_ACCOUNT_JSON")!;
 const DISCORD_BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN")!;
 const DISCORD_CHANNEL_ID = "1473868708261658695"; // #챌린지-인증
 const DEFAULT_ALLOWED_ORIGINS = [
-  "https://content.ggplab.xyz",
   "https://ggplab.github.io",
   "http://localhost:4173",
 ];
