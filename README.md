@@ -167,3 +167,4 @@ MIT License. 자세한 내용은 `LICENSE`를 참고하세요.
 - 기술 작업 리포트 (2026-02-23): `docs/technical_report_2026-02-23.md`
 - 웹 로그인/API 키 설계안: `docs/web-auth-api-key-plan.md`
 - 웹 로그인/API 키 배포 체크리스트: `docs/auth-deploy-checklist.md`
+- Discord 업데이트 이력 운영 플레이북: `docs/discord-update-history-playbook.md`
