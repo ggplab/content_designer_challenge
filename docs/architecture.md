@@ -43,6 +43,18 @@ sequenceDiagram
         DC-->>User: 인증 완료 메시지 표시
     end
 
+    %% 주간 정산 플로우
+    rect rgb(230, 255, 230)
+        Note over DV,GS: 주간 정산 플로우 (매주 일요일 또는 수동)
+        Note over DV: weekly-summary Edge Fn
+        DV->>GS: 지난주 행 조회 (날짜 필터)
+        GS-->>DV: 시트 데이터
+        DV->>GM: 추천 콘텐츠 선정 프롬프트
+        GM-->>DV: 교육적·챌린지·후킹 콘텐츠 인덱스
+        DV->>DC: POST /channels/{id}/messages\n(주간 정산 임베드)
+        DC-->>User: 주간 정산 메시지 표시
+    end
+
     %% 웹 인증 플로우
     rect rgb(255, 245, 230)
         Note over User,WEB: 웹 대시보드 인증 플로우
@@ -87,6 +99,7 @@ graph TD
             CKEY["create-api-key\nAPI 키 발급"]
             LKEY["list-api-keys\n키 목록 조회"]
             RKEY["revoke-api-key\n키 폐기"]
+            WS["weekly-summary\n─────────────\n주간 정산\n추천 콘텐츠 선정\nDiscord 임베드 전송"]
             SHARED["_shared/auth.ts\n공통 인증 유틸"]
         end
         subgraph CRON["pg_cron (워밍업)"]
@@ -146,6 +159,11 @@ graph TD
     DV -->|"URL 요약"| GM
     WV -->|"URL 요약"| GM
     GS -->|"JWT OAuth"| GAUTH
+
+    %% Weekly summary
+    WS -->|"지난주 행 조회"| GS
+    WS -->|"추천 콘텐츠 선정"| GM
+    WS -->|"POST 주간 정산 임베드"| DISCORD
 
     %% Discord followup
     DV -->|"PATCH webhook\nfollow-up 메시지"| DISCORD

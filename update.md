@@ -4,6 +4,7 @@
 
 | 날짜 | 주요 내용 |
 |------|-----------|
+| [2026-03-19](changelog/2026-03-19.md) | 주간 정산 Edge Function 추가 — 주차별 인증 집계·추천 콘텐츠·Discord 임베드 전송 |
 | [2026-03-18](changelog/2026-03-18.md) | changelog 아카이빙 구조 신설, Discord 메시지 항상 새 메시지로 전송 |
 | [2026-03-17](changelog/2026-03-17.md) | Discord OAuth 로그인, 사용자별 API 키, 워밍업 cron |
 | [2026-03-16](changelog/2026-03-16.md) | 보안 구조 변경, web-verify 강화 |
