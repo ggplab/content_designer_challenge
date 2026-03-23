@@ -81,8 +81,11 @@
       "freq": "2주1회"
     },
     {
-      "name": "믜믜",
-      "freq": "2주1회"
+      "name": "이승민",
+      "freq": "주1회",
+      "links": {
+        "Instagram": "https://www.instagram.com/eel.dimnim/"
+      }
     }
   ],
   "nickname_map": {
@@ -97,6 +100,6 @@
     "소진": "김소진",
     "tidyline": "이선정",
     "nunnu": "안예지",
-    "믜믜": "믜믜"
+    "믜믜": "이승민"
   }
 }
