@@ -7,6 +7,10 @@ disable-model-invocation: true
 
 새 챌린지 참가자를 `web/members.json`에 추가하고 git commit까지 완료해줘.
 
+> **신규 멤버 정보 확인**: 참가 신청 설문 시트에서 이름·freq·링크를 확인할 것.
+> Sheet ID: `18ye_Jyna8OVtsRYpweh706cn3AhbbfScl8h9VxF-R9M` (비공개, SA 인증 필요)
+> Discord 닉네임은 설문에 없으므로 Discord 멤버 목록과 대조해서 확인.
+
 ## 입력 형식
 
 사용자가 다음 형식으로 전달:

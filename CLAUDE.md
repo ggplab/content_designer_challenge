@@ -108,10 +108,18 @@ const week = Math.max(1, Math.ceil((days + 1) / 7));
 
 ### Google Sheets
 
+**인증 기록 시트** (Edge Function → Sheets)
 - Sheet ID: `1CKyVexXErtbkAVm6I-30fh3tei6J4B9HtCjq0-fmvvU`
 - 시트 탭: `시트1`
 - 컬럼: `date` | `user` | `platfrom`(오타 유지) | `link` | `number` | `summary` | `etc`
 - 인증: Service Account (`discord-challenge-bot@gen-lang-client-0573007724.iam.gserviceaccount.com`)
+
+**참가 신청 설문 시트** (멤버 SSOT)
+- Sheet ID: `18ye_Jyna8OVtsRYpweh706cn3AhbbfScl8h9VxF-R9M`
+- 시트 탭: `설문지 응답 시트1`
+- 컬럼: `[0]타임스탬프` | `[1]이름` | `[2]콘텐츠 소재` | `[3]플랫폼` | `[4]업로드 주기` | `[5]목표` | `[6]KPI` | `[7]참여동기` | `[8]이메일` | `[9~16]플랫폼별 링크`
+- 신규 멤버 온보딩 시 이 시트를 기준으로 `web/members.json` 업데이트
+- 비공개 시트 → SA 인증 필요 (`scripts/sync-members.js` 참고)
 
 ### Discord
 
@@ -149,7 +157,6 @@ supabase functions deploy discord-verify --project-ref tcxtcacibgoancvoiybx --no
 content_designer_challenge/
 ├── supabase/functions/discord-verify/   ← 활성 Edge Function
 ├── docs/                                ← 문서 (가이드, 공지, SNS 포스트)
-├── config/                              ← challenge_config.json
 ├── secrets/                             ← SA JSON 등 (gitignore)
 ├── deprecated/n8n/                      ← 구버전 n8n 워크플로우
 ├── CLAUDE.md
