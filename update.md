@@ -4,6 +4,7 @@
 
 | 날짜 | 주요 내용 |
 |------|-----------|
+| [2026-03-23](changelog/2026-03-23.md) | 신규 멤버 이승민 추가, 멤버 데이터 단일화, gitignore 보안 보강 |
 | [2026-03-19](changelog/2026-03-19.md) | 주간 정산 Edge Function 추가 — 주차별 인증 집계·추천 콘텐츠·Discord 임베드 전송 |
 | [2026-03-18](changelog/2026-03-18.md) | changelog 아카이빙 구조 신설, Discord 메시지 항상 새 메시지로 전송 |
 | [2026-03-17](changelog/2026-03-17.md) | Discord OAuth 로그인, 사용자별 API 키, 워밍업 cron |
