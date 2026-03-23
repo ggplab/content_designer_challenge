@@ -13,6 +13,10 @@ secrets/
 # Supabase local env
 supabase/.env
 supabase/.env.*
+supabase/.temp/
+
+# Cloudflare Wrangler cache
+cloudflare-worker/.wrangler/
 
 # Node / tooling
 node_modules/
