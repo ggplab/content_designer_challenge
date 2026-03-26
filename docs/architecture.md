@@ -49,9 +49,11 @@ sequenceDiagram
         Note over DV: weekly-summary Edge Fn
         DV->>GS: 지난주 행 조회 (날짜 필터)
         GS-->>DV: 시트 데이터
+        DV->>DC: GET /guilds/{id}/members (닉네임→ID 맵)
+        DC-->>DV: 서버 멤버 목록
         DV->>GM: 추천 콘텐츠 선정 프롬프트
         GM-->>DV: 교육적·챌린지·후킹 콘텐츠 인덱스
-        DV->>DC: POST /channels/{id}/messages\n(주간 정산 임베드)
+        DV->>DC: POST /channels/{id}/messages\n(주간 정산 임베드, 멘션 포함)
         DC-->>User: 주간 정산 메시지 표시
     end
 
@@ -162,8 +164,9 @@ graph TD
 
     %% Weekly summary
     WS -->|"지난주 행 조회"| GS
+    WS -->|"GET 길드 멤버 목록"| DISCORD
     WS -->|"추천 콘텐츠 선정"| GM
-    WS -->|"POST 주간 정산 임베드"| DISCORD
+    WS -->|"POST 주간 정산 임베드 (멘션 포함)"| DISCORD
 
     %% Discord followup
     DV -->|"PATCH webhook\nfollow-up 메시지"| DISCORD
