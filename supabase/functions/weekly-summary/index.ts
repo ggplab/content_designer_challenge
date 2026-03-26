@@ -252,7 +252,7 @@ async function runSummary(weekLabel: string): Promise<Record<string, unknown>> {
     sections.push("**지난주 추천 콘텐츠**\n추천을 건너뛰어요 — 이번주엔 더 풍성하게! 😊");
   }
 
-  sections.push("**다음 주도 함께 성장해요 💪**");
+  sections.push("**다음 주도 함께 성장해요 💪**\n제출 현황이 궁금하다면? [대시보드 바로가기](https://ggplab.github.io/content_designer_challenge/)");
 
   return {
     title: `📊 ${weekLabel} 주간 정산`,
