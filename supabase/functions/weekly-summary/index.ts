@@ -1,10 +1,33 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const DISCORD_BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN")!;
+const DISCORD_GUILD_ID = Deno.env.get("DISCORD_GUILD_ID")!;
 const GOOGLE_SHEET_ID = Deno.env.get("GOOGLE_SHEET_ID")!;
 const GCP_SERVICE_ACCOUNT_JSON = Deno.env.get("GCP_SERVICE_ACCOUNT_JSON")!;
 const DISCORD_CHANNEL_ID = Deno.env.get("DISCORD_WEEK_SUMMARY_CHANNEL_ID")!;
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")!;
+
+// ── Discord 길드 멤버 조회 → {닉네임: id} ────────────────────────────────
+
+async function fetchGuildMemberIds(): Promise<Map<string, string>> {
+  const resp = await fetch(
+    `https://discord.com/api/v10/guilds/${DISCORD_GUILD_ID}/members?limit=1000`,
+    { headers: { Authorization: `Bot ${DISCORD_BOT_TOKEN}` } }
+  );
+  if (!resp.ok) {
+    console.error("[summary] 길드 멤버 조회 실패:", resp.status, await resp.text());
+    return new Map();
+  }
+  const members = await resp.json();
+  const map = new Map<string, string>();
+  for (const m of members) {
+    const id = m.user?.id;
+    // 서버 닉네임 우선, 없으면 global_name, 없으면 username
+    const nick = m.nick ?? m.user?.global_name ?? m.user?.username;
+    if (id && nick) map.set(nick, id);
+  }
+  return map;
+}
 
 // ── 주차 계산 ──────────────────────────────────────────────────────────────
 
@@ -169,7 +192,12 @@ reason은 한국어로 15자 이내로 작성해주세요.
 // ── 정산 로직 ──────────────────────────────────────────────────────────────
 
 async function runSummary(weekLabel: string): Promise<Record<string, unknown>> {
-  const accessToken = await getGoogleAccessToken();
+  const [accessToken, memberIds] = await Promise.all([
+    getGoogleAccessToken(),
+    fetchGuildMemberIds(),
+  ]);
+  const mention = (nick: string) => memberIds.has(nick) ? `<@${memberIds.get(nick)}>` : nick;
+
   const rows = await fetchSheetRows(accessToken);
 
   // 헤더 제외, 해당 주차 행만 필터
@@ -202,7 +230,7 @@ async function runSummary(weekLabel: string): Promise<Record<string, unknown>> {
   // top 3
   const medals = ["🥇", "🥈", "🥉"];
   const top3 = sorted.slice(0, 3)
-    .map(([user, { count }], i) => `${medals[i]} ${user} (${count}회)`)
+    .map(([user, { count }], i) => `${medals[i]} ${mention(user)} (${count}회)`)
     .join("\n");
 
   // OG 파싱 성공한 콘텐츠만 추천 후보 (summary가 있고 "{platform} 콘텐츠" 패턴 아닌 것)
@@ -235,24 +263,24 @@ async function runSummary(weekLabel: string): Promise<Record<string, unknown>> {
     if (eduItem) {
       const shortUrl = await shortenUrl(eduItem.url);
       recLines.push(`📚 인사이트 얻어요 — ${picks.educational!.reason}`);
-      recLines.push(`${eduItem.user} · ${eduItem.platform} · ${shortUrl}`);
+      recLines.push(`${mention(eduItem.user)} · ${eduItem.platform} · ${shortUrl}`);
     }
     if (chalItem) {
       const shortUrl = await shortenUrl(chalItem.url);
       recLines.push(`🎯 챌린지 취지에 딱! — ${picks.challenge!.reason}`);
-      recLines.push(`${chalItem.user} · ${chalItem.platform} · ${shortUrl}`);
+      recLines.push(`${mention(chalItem.user)} · ${chalItem.platform} · ${shortUrl}`);
     }
     if (hookItem) {
       const shortUrl = await shortenUrl(hookItem.url);
       recLines.push(`🪝 이건 클릭 안 할 수 없어 — ${picks.hooking!.reason}`);
-      recLines.push(`${hookItem.user} · ${hookItem.platform} · ${shortUrl}`);
+      recLines.push(`${mention(hookItem.user)} · ${hookItem.platform} · ${shortUrl}`);
     }
     sections.push(recLines.join("\n"));
   } else {
     sections.push("**지난주 추천 콘텐츠**\n추천을 건너뛰어요 — 이번주엔 더 풍성하게! 😊");
   }
 
-  sections.push("**다음 주도 함께 성장해요 💪**\n제출 현황이 궁금하다면? [대시보드 바로가기](https://ggplab.github.io/content_designer_challenge/)");
+  sections.push("**이번 주도 함께 성장해요 💪**\n제출 현황이 궁금하다면? [대시보드 바로가기](https://ggplab.github.io/content_designer_challenge/)");
 
   return {
     title: `📊 ${weekLabel} 주간 정산`,
