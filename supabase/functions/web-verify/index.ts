@@ -1,11 +1,8 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
-import {
-  createAdminClient,
-  getBearerToken,
-  getSessionUser,
-  sha256Hex,
-} from "../_shared/auth.ts";
+import { createAdminClient } from "../_shared/supabase.ts";
+import { getBearerToken, getSessionUser } from "../_shared/session.ts";
+import { sha256Hex } from "../_shared/crypto.ts";
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")!;
 const GOOGLE_SHEET_ID = Deno.env.get("GOOGLE_SHEET_ID")!;
