@@ -215,9 +215,8 @@ curl -X POST http://localhost:54321/functions/v1/weekly-summary
 `weekly-summary`처럼 단순 POST 함수에 적합합니다.
 
 ```bash
-# env 로드 후 실행 (포트 8000)
-source supabase/.env.local  # 또는 export로 개별 설정
-deno run --allow-all supabase/functions/weekly-summary/index.ts
+# --env-file은 절대 경로로 지정해야 합니다 (상대 경로 미지원)
+deno run --allow-all --env-file=$(pwd)/.env.local supabase/functions/weekly-summary/index.ts
 
 # 테스트
 curl -X POST http://localhost:8000

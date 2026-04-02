@@ -97,9 +97,12 @@ Deno.serve(async (req: Request) => {
     const isPublic = (interaction.data?.custom_id ?? "").endsWith(":public");
     const userId: string = user.id ?? "";
 
-    (globalThis as unknown as { EdgeRuntime: { waitUntil: (p: Promise<void>) => void } }).EdgeRuntime.waitUntil(
-      processVerification(displayName, userId, rawLinks, interaction.token, isPublic)
-    );
+    const runtime = (globalThis as unknown as { EdgeRuntime?: { waitUntil: (p: Promise<void>) => void } }).EdgeRuntime;
+    if (runtime) {
+      runtime.waitUntil(processVerification(displayName, userId, rawLinks, interaction.token, isPublic));
+    } else {
+      processVerification(displayName, userId, rawLinks, interaction.token, isPublic).catch(console.error);
+    }
 
     return json({ type: 5 });
   }

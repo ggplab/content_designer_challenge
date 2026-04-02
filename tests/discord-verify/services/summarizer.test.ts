@@ -25,6 +25,16 @@ Deno.test("parseMetaContent: HTML 엔티티 디코딩", () => {
   assertEquals(parseMetaContent(html, "og:title"), "A & B <C>");
 });
 
+Deno.test("parseMetaContent: 16진수 숫자 엔티티 디코딩 (Instagram 한글)", () => {
+  const html = `<meta property="og:title" content="&#xbd84;&#xc694;&#xb9ac;&#xc655;">`;
+  assertEquals(parseMetaContent(html, "og:title"), "분요리왕");
+});
+
+Deno.test("parseMetaContent: 10진수 숫자 엔티티 디코딩", () => {
+  const html = `<meta property="og:title" content="&#48516;&#50836;">`;
+  assertEquals(parseMetaContent(html, "og:title"), "분요");
+});
+
 Deno.test("parseMetaContent: 매칭 없으면 null 반환", () => {
   assertEquals(parseMetaContent("<html></html>", "og:title"), null);
 });
