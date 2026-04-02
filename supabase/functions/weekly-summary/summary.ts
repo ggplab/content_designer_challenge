@@ -2,7 +2,7 @@ import { getGoogleAccessToken } from "../_shared/google-auth.ts";
 import { fetchGuildMemberIds, sendDiscordEmbed } from "./services/discord.ts";
 import { fetchSheetRows } from "./services/sheets.ts";
 import { pickRecommendedContents, type ContentItem } from "./services/gemini.ts";
-import { shortenUrl } from "./services/url.ts";
+import { shortenUrl } from "../_shared/url.ts";
 
 export async function runSummary(weekLabel: string): Promise<void> {
   const [accessToken, memberIds] = await Promise.all([
