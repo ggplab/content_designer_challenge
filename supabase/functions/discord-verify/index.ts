@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
-import { buildModal, processVerification } from "./service.ts";
+import { buildModal } from "./services/modal.ts";
+import { processVerification } from "./verification.ts";
 
 const DISCORD_PUBLIC_KEY = Deno.env.get("DISCORD_PUBLIC_KEY")!;
 
