@@ -1,6 +1,7 @@
 import { getWeekLabel, getTodayKST } from "../_shared/week.ts";
 import { detectPlatform, getMedal } from "../_shared/platform.ts";
 import { getGoogleAccessToken } from "../_shared/google-auth.ts";
+import { shortenUrl } from "../_shared/url.ts";
 import { fetchOGSummary, callGemini } from "./services/summarizer.ts";
 import { appendToSheets, getWeekCounts } from "./services/sheets.ts";
 import { sendFollowup } from "./services/discord.ts";
@@ -35,7 +36,7 @@ export async function processVerification(
   let existingCount = userCount;
   let weekTotal = totalCount;
 
-  const results: { platform: string; url: string; summary: string; medal: string }[] = [];
+  const results: { platform: string; url: string; shortUrl: string; summary: string; medal: string }[] = [];
 
   for (const url of links) {
     const platform = detectPlatform(url);
@@ -46,6 +47,7 @@ export async function processVerification(
     weekTotal++;
     const numberLabel = `${weekLabel}-${existingCount}회`;
     const medal = getMedal(weekTotal);
+    const shortUrl = isPublic ? await shortenUrl(url) : url;
 
     try {
       await appendToSheets(accessToken, [
@@ -57,7 +59,7 @@ export async function processVerification(
         summary,
         isPublic ? "public" : "private",
       ]);
-      results.push({ platform, url, summary, medal });
+      results.push({ platform, url, shortUrl, summary, medal });
       console.log(`✅ Sheets 저장: ${platform} — ${url}`);
     } catch (e) {
       console.error(`Sheets 저장 실패 (${url}):`, e);
@@ -77,10 +79,10 @@ export async function processVerification(
       msg += `• ${platform}\n`;
     }
   } else if (results.length === 1) {
-    msg += `📌 ${results[0].platform} · "${results[0].summary}"${results[0].medal}\n${results[0].url}`;
+    msg += `📌 ${results[0].platform} · "${results[0].summary}"${results[0].medal}\n${results[0].shortUrl}`;
   } else {
-    for (const { platform, url, summary, medal } of results) {
-      msg += `• ${platform} · "${summary}"${medal}\n  ${url}\n`;
+    for (const { platform, shortUrl, summary, medal } of results) {
+      msg += `• ${platform} · "${summary}"${medal}\n  ${shortUrl}\n`;
     }
   }
 

@@ -1,6 +1,6 @@
 import { assertEquals } from "jsr:@std/assert";
 import { stub } from "jsr:@std/testing/mock";
-import { shortenUrl } from "../../../supabase/functions/weekly-summary/services/url.ts";
+import { shortenUrl } from "../../supabase/functions/_shared/url.ts";
 
 // ── shortenUrl ─────────────────────────────────────────────────────────────
 
