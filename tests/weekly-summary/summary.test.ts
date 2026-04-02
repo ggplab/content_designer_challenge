@@ -59,7 +59,7 @@ Deno.test("aggregateUsers: 여러 유저 독립 집계", () => {
 });
 
 Deno.test("aggregateUsers: user 컬럼 없으면 Unknown으로 처리", () => {
-  const rows: Row[] = [["2026-03-09", "", "Blog", "https://x", "1주차-1회", "요약", "public"]];
+  const rows: Row[] = [["2026-03-09"]]; // row[1]이 undefined → "Unknown"
   const result = aggregateUsers(rows);
   assertEquals(result.has("Unknown"), true);
 });
