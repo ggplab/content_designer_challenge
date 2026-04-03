@@ -21,8 +21,9 @@ graph TD
     subgraph SUPABASE[Supabase · Tokyo]
         subgraph EDGE[Edge Functions]
             DV[discord-verify]
+            WS[weekly-summary]
             WV[web-verify]
-            SHARED[_shared/auth.ts]
+            SHARED[_shared/]
         end
         subgraph DB[PostgreSQL · RLS]
             MP[member_profiles]
@@ -37,11 +38,14 @@ graph TD
     end
 
     DISCORD -->|Ed25519 서명| DV
+    DISCORD -->|주간 정산 트리거| WS
     BROWSER --> ACCOUNT -->|Bearer / API Key| WV
     DV & WV --> SHARED --> DB & AUTH
-    DV -->|인증 기록 저장| GS
+    DV & WS -->|인증 기록 읽기/쓰기| GS
     DV & WV -->|URL 요약| GM
+    WS -->|추천 콘텐츠 선정| GM
     DV -->|PATCH follow-up| DISCORD
+    WS -->|주간 정산 임베드| DISCORD
 ```
 
 정적 대시보드(`web/`)는 GitHub Pages로 배포됩니다. 참가자는 Discord `#챌린지-인증` 채널에서 `/인증`으로만 제출합니다.
@@ -59,32 +63,58 @@ graph TD
 ```
 content_designer_challenge/
 ├── supabase/
-│   ├── functions/
-│   │   ├── discord-verify/     ← Discord 인터랙션 처리
-│   │   ├── web-verify/         ← 서버 전용 자동화 엔드포인트
-│   │   ├── claim-member-profile/
-│   │   ├── create-api-key/
-│   │   ├── list-api-keys/
-│   │   └── revoke-api-key/
-│   └── migrations/             ← 인증/키 관리 스키마
+│   └── functions/
+│       ├── _shared/                  ← 공통 모듈
+│       │   ├── cors.ts               ← CORS, HTTP 응답 헬퍼
+│       │   ├── crypto.ts             ← 해싱, API 키 생성
+│       │   ├── google-auth.ts        ← Google Service Account OAuth
+│       │   ├── platform.ts           ← 플랫폼 분류, 메달 부여
+│       │   ├── session.ts            ← 토큰 추출, 세션 유저
+│       │   ├── sheets.ts             ← Google Sheets HTTP 헬퍼
+│       │   ├── supabase.ts           ← Supabase 클라이언트 생성
+│       │   └── week.ts               ← 주차 계산
+│       ├── discord-verify/           ← Discord 인터랙션 처리
+│       │   ├── index.ts              ← controller (서명 검증, 라우팅)
+│       │   ├── verification.ts       ← 인증 처리 오케스트레이터
+│       │   └── services/
+│       │       ├── discord.ts        ← follow-up 메시지
+│       │       ├── modal.ts          ← 모달 빌더
+│       │       ├── sheets.ts         ← 인증 기록 읽기/쓰기
+│       │       └── summarizer.ts     ← OG 파싱, Gemini 요약
+│       ├── weekly-summary/           ← 주간 정산 자동화
+│       │   ├── index.ts              ← controller
+│       │   ├── summary.ts            ← 정산 오케스트레이터
+│       │   └── services/
+│       │       ├── discord.ts        ← 멤버 조회, 임베드 전송
+│       │       ├── gemini.ts         ← 추천 콘텐츠 선정
+│       │       ├── sheets.ts         ← 인증 기록 읽기
+│       │       └── url.ts            ← URL 단축
+│       ├── web-verify/               ← 서버 전용 자동화 엔드포인트
+│       ├── claim-member-profile/
+│       ├── create-api-key/
+│       ├── list-api-keys/
+│       └── revoke-api-key/
+├── tests/                            ← 유닛 테스트 (deno test)
+│   ├── discord-verify/
+│   │   └── services/
+│   ├── weekly-summary/
+│   │   └── services/
+│   └── shared/
 ├── web/
-│   ├── index.html              ← 공개 대시보드
-│   ├── account.html            ← 로그인 / API 키 관리 페이지
+│   ├── index.html                    ← 공개 대시보드
+│   ├── account.html                  ← 로그인 / API 키 관리 페이지
 │   ├── account.js
-│   ├── app-config.js           ← Supabase 공개 설정
+│   ├── app-config.js                 ← Supabase 공개 설정
 │   ├── dashboard-data.js
 │   └── members.json
 ├── docs/
-│   ├── architecture.md             ← 시스템 아키텍처 다이어그램
-│   ├── supabase-edge-function-discord-guide.md
-│   ├── google_sheets_schema.md
-│   ├── discord_announcement.md
-│   └── social-posts.md
+│   ├── architecture.md
+│   └── ...
 ├── config/
 │   └── challenge_config.json
-├── secrets/                    ← .gitignore (SA JSON 등)
+├── secrets/                          ← .gitignore (SA JSON 등)
 ├── deprecated/
-│   └── n8n/                    ← 구버전 n8n 워크플로우
+│   └── n8n/                          ← 구버전 n8n 워크플로우
 ├── CLAUDE.md
 └── README.md
 ```
@@ -104,8 +134,8 @@ content_designer_challenge/
 ## 배포
 
 ```bash
-cd /Users/limjung/Documents/Projects/content_designer_challenge
 supabase functions deploy discord-verify --project-ref tcxtcacibgoancvoiybx --no-verify-jwt
+supabase functions deploy weekly-summary --project-ref tcxtcacibgoancvoiybx --no-verify-jwt
 supabase functions deploy web-verify --project-ref tcxtcacibgoancvoiybx --no-verify-jwt
 ```
 
@@ -115,38 +145,88 @@ supabase functions deploy web-verify --project-ref tcxtcacibgoancvoiybx --no-ver
 
 - `git`
 - `supabase` CLI
-- `deno` (로컬 타입 체크 시)
+- `deno` 2.x 이상
 
-### 설치 및 실행
+### 설치
 
 ```bash
 git clone https://github.com/ggplab/content_designer_challenge.git
 cd content_designer_challenge
 ```
 
-로컬 파일로 API 키를 저장하지 말고, Supabase 시크릿에 등록해서 사용하세요.
+### 환경변수 설정
+
+로컬 테스트용 env 파일을 만듭니다. 절대 커밋하지 않습니다.
+
+```bash
+# supabase/.env.local
+DISCORD_PUBLIC_KEY=
+DISCORD_APPLICATION_ID=
+DISCORD_BOT_TOKEN=
+DISCORD_GUILD_ID=
+DISCORD_WEEK_SUMMARY_CHANNEL_ID=
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-2.5-flash          # 선택, 기본값 gemini-2.5-flash
+GOOGLE_SHEET_ID=
+GOOGLE_SHEET_TAB=시트1                  # 선택, 기본값 시트1
+GCP_SERVICE_ACCOUNT_JSON=
+```
+
+프로덕션 시크릿 등록:
 
 ```bash
 supabase secrets set DISCORD_PUBLIC_KEY=...
 supabase secrets set DISCORD_APPLICATION_ID=...
 supabase secrets set DISCORD_BOT_TOKEN=...
+supabase secrets set DISCORD_GUILD_ID=...
+supabase secrets set DISCORD_WEEK_SUMMARY_CHANNEL_ID=...
 supabase secrets set GEMINI_API_KEY=...
 supabase secrets set GOOGLE_SHEET_ID=...
 supabase secrets set GCP_SERVICE_ACCOUNT_JSON=...
-supabase secrets set WEB_VERIFY_API_KEY=...
 supabase secrets set WEB_VERIFY_ALLOWED_ORIGINS=https://ggplab.github.io/content_designer_challenge,https://ggplab.github.io,http://localhost:4173
-supabase secrets set WEB_VERIFY_RATE_LIMIT_WINDOW_MS=600000
-supabase secrets set WEB_VERIFY_RATE_LIMIT_MAX=20
 ```
 
-`WEB_VERIFY_API_KEY`는 브라우저나 정적 파일에 절대 넣지 않습니다. 외부 자동화가 필요할 때만 서버 환경변수나 비밀 저장소에서 읽어 사용합니다.
-`app-config.js`에는 Supabase URL과 publishable key만 넣습니다. publishable key는 공개 가능하지만, service role key나 사용자별 API 키는 넣지 않습니다.
+## 로컬 테스트
 
-계정 연결 흐름:
-- Discord OAuth 로그인
-- `account.html`에서 본인 참가자 이름 선택
-- `claim-member-profile`로 `member_profiles` 생성
-- 이후 API 키 발급 또는 세션 기반 웹 기능 사용
+### 유닛 테스트 (외부 의존 없음)
+
+```bash
+deno test tests/ --allow-all --ignore="tests/dashboard-data.test.js"
+```
+
+### 방법 1 — Supabase CLI (권장, 실제 배포 환경과 동일)
+
+Docker가 필요합니다.
+
+```bash
+# 로컬 Supabase 스택 실행
+supabase start
+
+# 함수 serve (별도 터미널)
+supabase functions serve discord-verify --env-file supabase/.env.local --no-verify-jwt
+supabase functions serve weekly-summary --env-file supabase/.env.local --no-verify-jwt
+
+# 테스트
+curl -X POST http://localhost:54321/functions/v1/weekly-summary
+```
+
+### 방법 2 — Deno 직접 실행 (Docker 없이 빠르게)
+
+`weekly-summary`처럼 단순 POST 함수에 적합합니다.
+
+```bash
+# --env-file은 절대 경로로 지정해야 합니다 (상대 경로 미지원)
+deno run --allow-all --env-file=$(pwd)/.env.local supabase/functions/weekly-summary/index.ts
+
+# 테스트
+curl -X POST http://localhost:8000
+```
+
+> **주의:** `discord-verify`는 `EdgeRuntime.waitUntil()`을 사용하므로 Deno 직접 실행 시 백그라운드 처리가 동작하지 않습니다. Supabase CLI 방식을 권장합니다.
+
+### discord-verify 테스트 팁
+
+Discord 서명 검증이 있어 일반 curl로는 `401`이 납니다. Discord Dev Portal의 Interactions Endpoint에 로컬 URL을 등록하거나 (`ngrok` 등으로 터널링), 서명 검증 로직을 임시로 bypass하여 로직만 확인하는 방법을 사용합니다.
 
 ## 인증 방식
 
@@ -158,10 +238,15 @@ supabase secrets set WEB_VERIFY_RATE_LIMIT_MAX=20
 
 ## 기여 방법
 
-1. 이 저장소를 fork 합니다.
-2. 작업 브랜치를 생성합니다. (`git checkout -b feat/my-change`)
-3. 변경사항을 커밋합니다. (`git commit -m "feat: ..."` )
-4. 원격 브랜치에 푸시 후 Pull Request를 생성합니다.
+로컬에서 feature 브랜치를 따서 작업하고 로컬 main에 머지 후 푸시합니다. 리모트에 feature 브랜치를 올리지 않아도 됩니다.
+
+```bash
+git checkout -b feat/my-change
+# 작업 후
+git checkout main && git merge feat/my-change
+git push origin main
+git branch -d feat/my-change
+```
 
 PR에는 아래 항목을 포함해 주세요.
 
@@ -181,10 +266,7 @@ PR에는 아래 항목을 포함해 주세요.
 
 ## TODO
 
-- [ ] 주차별 제출 횟수 태그 (1주차-1회, 1주차-2회 형식)
 - [ ] Discord 응답 메시지 URL 단축
-- [ ] 주간 정산 워크플로우 (매주 일요일 자동 집계)
-- [ ] URL 없는 모달 제출 예외 처리
 
 ## License
 

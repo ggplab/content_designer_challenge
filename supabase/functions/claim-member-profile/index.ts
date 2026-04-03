@@ -1,12 +1,8 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
-import {
-  buildCorsHeaders,
-  createAdminClient,
-  getSessionUser,
-  isOriginAllowed,
-  jsonResponse,
-} from "../_shared/auth.ts";
+import { createAdminClient } from "../_shared/supabase.ts";
+import { buildCorsHeaders, isOriginAllowed, jsonResponse } from "../_shared/cors.ts";
+import { getSessionUser } from "../_shared/session.ts";
 
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("Origin");
