@@ -1,7 +1,8 @@
 export function parseMetaContent(html: string, property: string): string | null {
+  const attr = `(?:property|name)`;
   const patterns = [
-    new RegExp(`<meta[^>]+property=["']${property}["'][^>]+content=["']([^"'\\r\\n]+)["']`, "i"),
-    new RegExp(`<meta[^>]+content=["']([^"'\\r\\n]+)["'][^>]+property=["']${property}["']`, "i"),
+    new RegExp(`<meta[^>]+${attr}=["']${property}["'][^>]+content=["']([^"']+)["']`, "i"),
+    new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+${attr}=["']${property}["']`, "i"),
   ];
   for (const re of patterns) {
     const m = html.match(re);
@@ -10,7 +11,8 @@ export function parseMetaContent(html: string, property: string): string | null 
         .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
         .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, " ")
         .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
-        .replace(/&#([0-9]+);/g, (_, dec) => String.fromCodePoint(parseInt(dec, 10)));
+        .replace(/&#([0-9]+);/g, (_, dec) => String.fromCodePoint(parseInt(dec, 10)))
+        .split("\n")[0].trim();
     }
   }
   return null;
@@ -81,12 +83,6 @@ export async function callGemini(url: string, platform: string): Promise<string>
           generationConfig: {
             temperature: 0.1,
             maxOutputTokens: 50,
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: "OBJECT",
-              properties: { summary: { type: "STRING" } },
-              required: ["summary"],
-            },
           },
         }),
       }
@@ -98,9 +94,8 @@ export async function callGemini(url: string, platform: string): Promise<string>
     }
 
     const data = await resp.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-    const parsed = JSON.parse(text);
-    return (parsed.summary as string)?.slice(0, 20) || `${platform} 콘텐츠`;
+    const text = (data.candidates?.[0]?.content?.parts?.[0]?.text ?? "").trim();
+    return text.slice(0, 20) || `${platform} 콘텐츠`;
   } catch (e) {
     console.error("Gemini error:", e);
     return `${platform} 콘텐츠`;

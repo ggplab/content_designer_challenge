@@ -47,7 +47,9 @@ export async function processVerification(
     weekTotal++;
     const numberLabel = `${weekLabel}-${existingCount}회`;
     const medal = getMedal(weekTotal);
-    const shortUrl = isPublic ? await shortenUrl(url) : url;
+    const shortUrl = isPublic && platform !== "Instagram" && platform !== "Threads"
+      ? await shortenUrl(url)
+      : url;
 
     try {
       await appendToSheets(accessToken, [
