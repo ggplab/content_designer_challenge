@@ -95,14 +95,14 @@ graph TD
 
     subgraph SUPABASE["Supabase (tcxtcacibgoancvoiybx · Tokyo)"]
         subgraph EDGE["Edge Functions (Deno)"]
-            DV["discord-verify\n─────────────\nGET 헬스체크\n서명 검증\n모달 처리\n주차 계산\n메달 부여"]
+            DV["discord-verify\n─────────────\nindex.ts (서명 검증·라우팅)\nverification.ts (오케스트레이터)\nservices/ (summarizer·sheets·discord·modal)"]
             WV["web-verify\n─────────────\nCORS 검증\nRate Limit\n감사 로그"]
             CLAIM["claim-member-profile\n참가자 이름 연결"]
             CKEY["create-api-key\nAPI 키 발급"]
             LKEY["list-api-keys\n키 목록 조회"]
             RKEY["revoke-api-key\n키 폐기"]
-            WS["weekly-summary\n─────────────\n주간 정산\n추천 콘텐츠 선정\nDiscord 임베드 전송"]
-            SHARED["_shared/auth.ts\n공통 인증 유틸"]
+            WS["weekly-summary\n─────────────\nindex.ts (라우팅)\nsummary.ts (오케스트레이터)\nservices/ (discord·gemini·sheets·url)"]
+            SHARED["_shared/\n─────────────\nauth · cors · crypto · session\nsupabase · google-auth\nweek · platform · sheets · url"]
         end
         subgraph CRON["pg_cron (워밍업)"]
             WARMUP["warmup-discord-verify\n─────────────\n*/5 * * * *\npg_net.http_get()"]
