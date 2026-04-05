@@ -111,7 +111,7 @@ Deno.test("fetchOGSummary: 40자 초과 제목은 잘림", async () => {
 Deno.test("callGemini: 정상 요약 반환", async () => {
   const fetchStub = stub(globalThis, "fetch", () =>
     Promise.resolve(new Response(JSON.stringify({
-      candidates: [{ content: { parts: [{ text: '{"summary":"마케팅 전략 정리"}' }] } }],
+      candidates: [{ content: { parts: [{ text: "마케팅 전략 정리" }] } }],
     }), { status: 200 }))
   );
   try {
@@ -140,7 +140,7 @@ Deno.test("callGemini: GEMINI_MODEL env 적용", async () => {
   const fetchStub = stub(globalThis, "fetch", (url) => {
     calledUrl = url.toString();
     return Promise.resolve(new Response(JSON.stringify({
-      candidates: [{ content: { parts: [{ text: '{"summary":"테스트"}' }] } }],
+      candidates: [{ content: { parts: [{ text: "테스트" }] } }],
     }), { status: 200 }));
   });
   try {

@@ -40,9 +40,10 @@ export async function processVerification(
 
   for (const url of links) {
     const platform = detectPlatform(url);
-    const summary = isPublic
+    const UNSUMMARIZABLE = ["Instagram", "Threads"];
+    const summary = isPublic && !UNSUMMARIZABLE.includes(platform)
       ? (await fetchOGSummary(url) ?? await callGemini(url, platform))
-      : "";
+      : isPublic ? `${platform}콘텐츠` : "";
     existingCount++;
     weekTotal++;
     const numberLabel = `${weekLabel}-${existingCount}회`;
