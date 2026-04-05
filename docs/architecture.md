@@ -29,10 +29,14 @@ sequenceDiagram
         Note over DV: EdgeRuntime.waitUntil() 백그라운드 처리
         loop 각 URL별
             DV->>DV: detectPlatform(url)
-            DV->>DV: fetchOGSummary(url) [5초 timeout]
-            alt OG 태그 실패
-                DV->>GM: URL + 프롬프트
-                GM-->>DV: { summary: "15자 요약" }
+            alt Instagram / Threads
+                DV->>DV: summary = "{platform}콘텐츠" (고정)
+            else 그 외 플랫폼
+                DV->>DV: fetchOGSummary(url) [5초 timeout]
+                alt OG 태그 실패
+                    DV->>GM: URL + 프롬프트
+                    GM-->>DV: 15자 요약
+                end
             end
             DV->>GS: appendToSheets(row)
             GS-->>DV: 200 OK
@@ -267,8 +271,12 @@ erDiagram
 
 ### URL 요약 우선순위
 ```
-1순위: OG 메타 태그 (og:title, twitter:title, <title>) — 5초 timeout
-2순위: Gemini 2.5 Flash — 15자 이내 한국어 요약
+Instagram / Threads: 고정 문자열 "{platform}콘텐츠" (OG fetch · Gemini 호출 없음)
+  → 이유: 클라우드 서버 IP 차단으로 429 반환, URL 자체에 내용 정보 없어 Gemini 할루시네이션 발생
+
+그 외 플랫폼:
+  1순위: OG 메타 태그 (og:title, twitter:title, <title>) — 5초 timeout
+  2순위: Gemini 2.5 Flash — 15자 이내 한국어 요약
 ```
 
 ### 인증 수단 (web-verify)
