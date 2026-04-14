@@ -40,10 +40,14 @@ sequenceDiagram
             end
             DV->>GS: appendToSheets(row)
             GS-->>DV: 200 OK
+            alt 공개 제출 + 단축 가능 플랫폼
+                DV->>DB: insertShortLink(code, url)
+                DB-->>DV: ok
+            end
         end
         DV->>GS: getWeekCounts() — 이번 주 제출 순위 조회
         GS-->>DV: 시트 데이터
-        DV->>DC: PATCH follow-up 메시지<br/>(플랫폼, 요약, 주차, 메달)
+        DV->>DC: PATCH follow-up 메시지<br/>(플랫폼, 요약, 주차, 메달, 단축 URL)
         DC-->>User: 인증 완료 메시지 표시
     end
 
@@ -106,7 +110,8 @@ graph TD
             LKEY["list-api-keys\n키 목록 조회"]
             RKEY["revoke-api-key\n키 폐기"]
             WS["weekly-summary\n─────────────\nindex.ts (라우팅)\nsummary.ts (오케스트레이터)\nservices/ (discord·gemini·sheets·url)"]
-            SHARED["_shared/\n─────────────\nauth · cors · crypto · session\nsupabase · google-auth\nweek · platform · sheets · url"]
+            R["r\n─────────────\nURL 단축 리다이렉트"]
+            SHARED["_shared/\n─────────────\nauth · cors · crypto · session\nsupabase · google-auth\nweek · platform · sheets · url\nshort-links"]
         end
         subgraph CRON["pg_cron (워밍업)"]
             WARMUP["warmup-discord-verify\n─────────────\n*/5 * * * *\npg_net.http_get()"]
@@ -116,6 +121,7 @@ graph TD
             CM["challenge_members\n─────────────\nchallenge_name\nis_active"]
             AK["api_keys\n─────────────\nkey_hash (SHA-256)\nkey_prefix\nscopes\nexpires_at\nrevoked_at"]
             AL["api_audit_logs\n─────────────\nip_address\norigin\nstatus_code\nerror_code"]
+            SL["short_links\n─────────────\ncode (PK)\noriginal_url\ncreated_at"]
         end
         AUTH["Supabase Auth\n(Discord OAuth)"]
     end
@@ -144,6 +150,10 @@ graph TD
     INDEX -->|fetch| MEMBERS
     ACCOUNT --> CFG
 
+    %% 클라이언트 → r (리다이렉트)
+    BROWSER -->|"GET /r/{code}"| R
+    R --> SHARED
+
     %% Edge → Shared
     DV --> SHARED
     WV --> SHARED
@@ -158,6 +168,8 @@ graph TD
     SHARED --> AK
     SHARED --> AL
     SHARED --> AUTH
+    DV -->|"insertShortLink"| SL
+    R -->|"resolveShortLink"| SL
 
     %% Edge → External
     DV -->|"append row\ngetWeekCounts"| GS
@@ -240,6 +252,12 @@ erDiagram
         text number "N주차-M회"
         text summary "최대 40자 요약"
         text etc "public / private"
+    }
+
+    SHORT_LINKS {
+        text code PK "6자리 랜덤 코드"
+        text original_url "원본 URL"
+        timestamptz created_at
     }
 
     AUTH_USERS ||--o| MEMBER_PROFILES : "1:1 claim"
