@@ -23,6 +23,7 @@ export function getSupabasePublishableKey(): string {
 export function getSupabaseServiceRoleKey(): string {
   return (
     Deno.env.get("SERVICE_ROLE_KEY") ??
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ??
     getRequiredEnv("SERVICE_ROLE_KEY")
   );
 }

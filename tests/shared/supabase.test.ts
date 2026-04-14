@@ -34,13 +34,23 @@ Deno.test("getSupabasePublishableKey: SUPABASE_ANON_KEY fallback", () => {
   Deno.env.delete("SUPABASE_ANON_KEY");
 });
 
-Deno.test("getSupabaseServiceRoleKey: env 없으면 throw", () => {
+Deno.test("getSupabaseServiceRoleKey: 둘 다 없으면 throw", () => {
   Deno.env.delete("SERVICE_ROLE_KEY");
+  Deno.env.delete("SUPABASE_SERVICE_ROLE_KEY");
   assertThrows(() => getSupabaseServiceRoleKey(), Error, "SERVICE_ROLE_KEY");
 });
 
-Deno.test("getSupabaseServiceRoleKey: env 있으면 반환", () => {
+Deno.test("getSupabaseServiceRoleKey: SERVICE_ROLE_KEY 우선 반환", () => {
   Deno.env.set("SERVICE_ROLE_KEY", "service-role-key");
+  Deno.env.set("SUPABASE_SERVICE_ROLE_KEY", "auto-injected-key");
   assertEquals(getSupabaseServiceRoleKey(), "service-role-key");
   Deno.env.delete("SERVICE_ROLE_KEY");
+  Deno.env.delete("SUPABASE_SERVICE_ROLE_KEY");
+});
+
+Deno.test("getSupabaseServiceRoleKey: SUPABASE_SERVICE_ROLE_KEY fallback", () => {
+  Deno.env.delete("SERVICE_ROLE_KEY");
+  Deno.env.set("SUPABASE_SERVICE_ROLE_KEY", "auto-injected-key");
+  assertEquals(getSupabaseServiceRoleKey(), "auto-injected-key");
+  Deno.env.delete("SUPABASE_SERVICE_ROLE_KEY");
 });

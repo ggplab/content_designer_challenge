@@ -1,12 +1,6 @@
-export async function shortenUrl(url: string): Promise<string> {
-  try {
-    const resp = await fetch(
-      `https://is.gd/create.php?format=simple&url=${encodeURIComponent(url)}`
-    );
-    if (!resp.ok) return url;
-    const short = await resp.text();
-    return short.trim().startsWith("https://is.gd/") ? short.trim() : url;
-  } catch {
-    return url;
-  }
+const CHARS = "abcdefghijklmnopqrstuvwxyz0123456789";
+
+export function generateShortCode(length = 6): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(length));
+  return Array.from(bytes, (b) => CHARS[b % CHARS.length]).join("");
 }

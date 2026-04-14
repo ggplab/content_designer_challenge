@@ -1,56 +1,25 @@
-import { assertEquals } from "jsr:@std/assert";
-import { stub } from "jsr:@std/testing/mock";
-import { shortenUrl } from "../../supabase/functions/_shared/url.ts";
+import { assertEquals, assertMatch } from "jsr:@std/assert";
+import { generateShortCode } from "../../supabase/functions/_shared/url.ts";
 
-// ── shortenUrl ─────────────────────────────────────────────────────────────
+// ── generateShortCode ──────────────────────────────────────────────────────
 
-Deno.test("shortenUrl: 정상 단축 URL 반환", async () => {
-  const fetchStub = stub(globalThis, "fetch", () =>
-    Promise.resolve(new Response("https://is.gd/abc123", { status: 200 }))
-  );
-  try {
-    const result = await shortenUrl("https://very-long-url.example.com/path/to/content");
-    assertEquals(result, "https://is.gd/abc123");
-  } finally {
-    fetchStub.restore();
-  }
+Deno.test("generateShortCode: 기본 길이 6자리 반환", () => {
+  const code = generateShortCode();
+  assertEquals(code.length, 6);
 });
 
-Deno.test("shortenUrl: API 오류 → 원본 URL 반환", async () => {
-  const original = "https://example.com/post";
-  const fetchStub = stub(globalThis, "fetch", () =>
-    Promise.resolve(new Response("Error", { status: 500 }))
-  );
-  try {
-    const result = await shortenUrl(original);
-    assertEquals(result, original);
-  } finally {
-    fetchStub.restore();
-  }
+Deno.test("generateShortCode: 소문자+숫자만 포함", () => {
+  const code = generateShortCode();
+  assertMatch(code, /^[a-z0-9]+$/);
 });
 
-Deno.test("shortenUrl: is.gd 접두사 아닌 응답 → 원본 URL 반환", async () => {
-  const original = "https://example.com/post";
-  const fetchStub = stub(globalThis, "fetch", () =>
-    Promise.resolve(new Response("Error: rate limit exceeded", { status: 200 }))
-  );
-  try {
-    const result = await shortenUrl(original);
-    assertEquals(result, original);
-  } finally {
-    fetchStub.restore();
-  }
+Deno.test("generateShortCode: 지정 길이 반환", () => {
+  assertEquals(generateShortCode(8).length, 8);
+  assertEquals(generateShortCode(4).length, 4);
 });
 
-Deno.test("shortenUrl: 네트워크 오류 → 원본 URL 반환", async () => {
-  const original = "https://example.com/post";
-  const fetchStub = stub(globalThis, "fetch", () =>
-    Promise.reject(new Error("network error"))
-  );
-  try {
-    const result = await shortenUrl(original);
-    assertEquals(result, original);
-  } finally {
-    fetchStub.restore();
-  }
+Deno.test("generateShortCode: 호출마다 다른 코드 생성", () => {
+  const codes = new Set(Array.from({ length: 20 }, () => generateShortCode()));
+  // 20번 중 최소 10개 이상 유니크 (충돌 가능성 극히 낮음)
+  assertEquals(codes.size > 10, true);
 });

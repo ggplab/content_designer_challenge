@@ -1,7 +1,7 @@
 import { getWeekLabel, getTodayKST } from "../_shared/week.ts";
 import { detectPlatform, getMedal } from "../_shared/platform.ts";
 import { getGoogleAccessToken } from "../_shared/google-auth.ts";
-import { shortenUrl } from "../_shared/url.ts";
+import { createShortLink } from "../_shared/short-links.ts";
 import { fetchOGSummary, callGemini } from "./services/summarizer.ts";
 import { appendToSheets, getWeekCounts } from "./services/sheets.ts";
 import { sendFollowup } from "./services/discord.ts";
@@ -48,9 +48,8 @@ export async function processVerification(
     weekTotal++;
     const numberLabel = `${weekLabel}-${existingCount}회`;
     const medal = getMedal(weekTotal);
-    const shortUrl = isPublic && platform !== "Instagram" && platform !== "Threads"
-      ? await shortenUrl(url)
-      : url;
+    const isShortenable = isPublic && platform !== "Instagram" && platform !== "Threads";
+    const baseUrl = Deno.env.get("REDIRECT_BASE_URL") ?? Deno.env.get("SUPABASE_URL") ?? "";
 
     try {
       await appendToSheets(accessToken, [
@@ -62,10 +61,19 @@ export async function processVerification(
         summary,
         isPublic ? "public" : "private",
       ]);
+      let shortUrl = url;
+      if (isShortenable) {
+        try {
+          const shortCode = await createShortLink(url);
+          shortUrl = `${baseUrl}/functions/v1/r/${shortCode}`;
+        } catch (e) {
+          console.error(`URL 단축 실패, 원본 URL 사용 (${url}):`, e);
+        }
+      }
       results.push({ platform, url, shortUrl, summary, medal });
-      console.log(`✅ Sheets 저장: ${platform} — ${url}`);
+      console.log(`✅ 저장 완료: ${platform} — ${url}`);
     } catch (e) {
-      console.error(`Sheets 저장 실패 (${url}):`, e);
+      console.error(`저장 실패 (${url}):`, e);
     }
   }
 
