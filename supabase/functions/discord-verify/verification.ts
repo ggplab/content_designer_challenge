@@ -78,8 +78,8 @@ export async function processVerification(
   let msg = `✅ ${mention}님, ${weekLabel} 인증 완료! 🎉\n\n`;
   if (!isPublic) {
     msg += "🔒 비공개로 인증했습니다.\n";
-    for (const { platform } of results) {
-      msg += `• ${platform}\n`;
+    for (const { platform, medal } of results) {
+      msg += `• ${platform}${medal}\n`;
     }
   } else if (results.length === 1) {
     msg += `📌 ${results[0].platform} · "${results[0].summary}"${results[0].medal}\n${results[0].shortUrl}`;
