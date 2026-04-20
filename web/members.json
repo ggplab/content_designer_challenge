@@ -86,6 +86,10 @@
       "links": {
         "Instagram": "https://www.instagram.com/eel.dimnim/"
       }
+    },
+    {
+      "name": "이인영 강사",
+      "freq": "2주1회"
     }
   ],
   "nickname_map": {
@@ -100,6 +104,7 @@
     "소진": "김소진",
     "tidyline": "이선정",
     "nunnu": "안예지",
-    "믜믜": "이승민"
+    "믜믜": "이승민",
+    "이인영 강사": "이인영 강사"
   }
 }
