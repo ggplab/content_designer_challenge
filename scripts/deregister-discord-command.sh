@@ -5,7 +5,7 @@
 # 사용법:
 #   CHALLENGE_BOT_TOKEN='너만알맡봇_토큰' bash scripts/deregister-discord-command.sh
 #
-# 2기 재등록은 docs/season1-teardown.md "4. Discord /인증 슬래시 커맨드 재등록" 참고.
+# 2기 재등록은 docs/season1-pause.md "4. Discord /인증 슬래시 커맨드 재등록" 참고.
 set -euo pipefail
 
 TOKEN="${CHALLENGE_BOT_TOKEN:-}"

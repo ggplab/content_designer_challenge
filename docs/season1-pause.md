@@ -1,4 +1,6 @@
-# 1기 종료(teardown) 및 2기 재가동 가이드
+# 1기 일시 종료(pause) 및 2기 재가동 가이드
+
+> 용어 메모: 삭제가 아니라 보존 후 재가동이므로 업계 표준상 "pause / mothballing(보존형 일시 종료)"에 해당한다. 문서 성격은 handover doc + restore runbook. 근거는 `tech-research-hub/researches/2026-05-28-it-service-teardown-vs-mothballing-terminology.md` 참고.
 
 콘텐츠 디자이너 챌린지 "너만알맡" 1기 종료(2026-05-28) 시 운영 자동화를 내린 내역과,
 2기 재가동에 필요한 복원 절차를 기록한다. 함수/DB/Secret은 삭제하지 않고 보존했다.
