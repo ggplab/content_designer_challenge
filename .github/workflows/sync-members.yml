@@ -1,8 +1,9 @@
 name: Sync Members
 
 on:
-  schedule:
-    - cron: '0 15 * * *'  # 매일 자정 KST (UTC 15:00)
+  # 1기 종료(2026-05)로 매일 자동 sync 중단. 2기 재개 시 아래 schedule 주석 해제.
+  # schedule:
+  #   - cron: '0 15 * * *'  # 매일 자정 KST (UTC 15:00)
   workflow_dispatch:       # 수동 실행 가능
 
 permissions:

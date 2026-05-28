@@ -135,6 +135,18 @@
     }
     .verify-cta:hover { opacity: 0.88; }
 
+    /* 1기 종료 배너 */
+    .season-end-banner {
+      display: block; width: 100%; padding: 18px;
+      background: var(--card); color: var(--text);
+      border: 1.5px solid var(--accent); border-radius: 12px;
+      text-align: center; font-weight: 700; font-size: 1.05rem; letter-spacing: 0.01em;
+    }
+    .season-end-banner .sub {
+      display: block; margin-top: 6px;
+      font-size: 0.85rem; font-weight: 500; color: var(--muted);
+    }
+
     /* 모달 오버레이 */
     .modal-overlay {
       display: none; position: fixed; inset: 0;
@@ -253,8 +265,10 @@
     <p>너 만들기만하고, 알고리즘에 맡겨 — 12주 콘텐츠 챌린지</p>
   </header>
 
-  <button class="verify-cta" onclick="openVerifyGuide()">Discord에서 인증하기</button>
-  <button class="api-cta" onclick="goToAccountPage()">내 계정 / API 키 관리</button>
+  <div class="season-end-banner">
+    챌린지 1기가 종료되었습니다
+    <span class="sub">참여해주신 모든 분께 감사드립니다. 2기로 곧 돌아오겠습니다.</span>
+  </div>
 
   <!-- 인증 모달 -->
   <div class="modal-overlay" id="verify-modal" onclick="closeOnBackdrop(event)">
@@ -307,10 +321,6 @@
     function closeOnBackdrop(e) {
       if (e.target === document.getElementById('verify-modal')) closeVerifyGuide();
     }
-    function goToAccountPage() {
-      window.location.href = './account.html';
-    }
-
     // ── Theme ──
     function toggleTheme() {
       const html = document.documentElement;
