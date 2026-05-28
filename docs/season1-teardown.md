@@ -15,14 +15,14 @@
 
 ## 보존한 것 (삭제하지 않음, 2기 재사용)
 
-- Edge Function 7개: `discord-verify`, `web-verify`, `weekly-summary`, `claim-member-profile`, `create-api-key`, `list-api-keys`, `revoke-api-key` (Supabase에 그대로 배포된 상태)
+- Edge Function 8개: `discord-verify`, `web-verify`, `weekly-summary`, `claim-member-profile`, `create-api-key`, `list-api-keys`, `revoke-api-key`, `r` (Supabase에 그대로 배포된 상태). `r`은 discord-verify가 만드는 단축 링크 리다이렉트용이며, 갤러리는 Sheets의 원본 URL을 직접 쓰므로 `r`에 의존하지 않는다(보존만).
 - Supabase Secrets 전부 (다른 프로젝트와 공유분 포함)
 - DB 테이블 4개: `member_profiles`, `challenge_members`, `api_keys`, `api_audit_logs`
 - GitHub Pages 갤러리 사이트 (`web/`)
 - Google Sheets (인증 기록 시트, 설문 응답 시트)
 - 1기 운영 최종 상태 git 태그: `season1-final`
 
-> 주의: 이 Supabase 프로젝트(`tcxtcacibgoancvoiybx`)는 ggplab 홈페이지/예약 시스템/인프런 n8n 챌린지 등과 공유한다. 함수 삭제·Secret 변경 시 챌린지 소관(위 7개 함수, `DISCORD_*`)만 건드릴 것.
+> 주의: 이 Supabase 프로젝트(`tcxtcacibgoancvoiybx`)는 ggplab 홈페이지/예약 시스템/인프런 n8n 챌린지 등과 공유한다. 함수 삭제·Secret 변경 시 챌린지 소관(위 8개 함수, `DISCORD_*`)만 건드릴 것.
 
 ## 2기 재가동 절차
 
