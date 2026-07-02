@@ -48,6 +48,9 @@ Discord /인증 (모달 팝업, 최대 5개 링크)
 
 ## 개발 규칙
 
+### 디자인
+- 웹 UI accent 블루는 `~/Projects/ggplab-design-system/ggplab/tokens.js`의 브랜드 블루(`#2563EB`)를 SSOT로 따르고, 대외 산출물에 ggplab 브랜드명/로고는 노출하지 않는다(브랜드는 BuildnWrite만).
+
 ### 파일 구조
 - 새 로직 추가 전 `_shared/`에 유사 기능이 있는지 먼저 확인
 - 두 함수 이상 공통으로 쓰이는 코드는 `_shared/`로 분리
