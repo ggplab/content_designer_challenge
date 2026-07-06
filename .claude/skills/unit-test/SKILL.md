@@ -1,5 +1,5 @@
 ---
-name: 유닛테스트
+name: unit-test
 description: Edge Function의 핵심 로직(주차 계산, 플랫폼 분류, 메달 부여, URL 필터)을 유닛 테스트하고 결과를 리포트한다. 코드 변경 후 배포 전에 검증할 때 사용한다.
 ---
 

@@ -59,7 +59,7 @@ Discord /인증 (모달 팝업, 최대 5개 링크)
 - 새 파일을 추가할 때는 기존 파일을 수정하는 방법이 없는지 먼저 검토
 
 ### 작업 순서
-1. 기능 추가/수정 후 반드시 `/유닛테스트` 실행
+1. 기능 추가/수정 후 반드시 `/unit-test` 실행 (구 `/유닛테스트`)
 2. 테스트 전부 통과한 후 커밋
 3. 로컬 테스트 완료 후 배포
 
@@ -157,7 +157,7 @@ const week = Math.max(1, Math.ceil((days + 1) / 7));
 ## 배포
 
 ```bash
-cd /Users/limjung/Documents/Projects/content_designer_challenge
+cd /Users/limjung/Projects/content-designer-challenge
 supabase functions deploy discord-verify --project-ref tcxtcacibgoancvoiybx --no-verify-jwt
 ```
 
@@ -178,7 +178,7 @@ supabase functions deploy discord-verify --project-ref tcxtcacibgoancvoiybx --no
 ## 디렉토리 구조
 
 ```
-content_designer_challenge/
+content-designer-challenge/              (GitHub repo명은 content_designer_challenge)
 ├── supabase/functions/discord-verify/   ← 활성 Edge Function
 ├── docs/                                ← 문서 (가이드, 공지, SNS 포스트)
 ├── secrets/                             ← SA JSON 등 (gitignore)

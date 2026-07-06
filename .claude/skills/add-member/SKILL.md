@@ -1,5 +1,5 @@
 ---
-name: 멤버추가
+name: add-member
 description: 새 챌린지 참가자를 web/members.json에 추가하고 git commit·push까지 완료한다. members.json 파일 수정과 git push가 포함되므로 사용자가 명시적으로 호출할 때만 실행한다.
 argument-hint: "[이름] [Discord닉네임] [freq] [플랫폼:URL ...]"
 disable-model-invocation: true
@@ -15,13 +15,13 @@ disable-model-invocation: true
 
 사용자가 다음 형식으로 전달:
 ```
-/멤버추가 [이름] [Discord닉네임] [freq] [플랫폼:URL ...]
+/add-member [이름] [Discord닉네임] [freq] [플랫폼:URL ...]
 ```
 
 예시:
-- `/멤버추가 이선정 tidyline 2주1회`
-- `/멤버추가 홍길동 gildong 주1회 Blog:https://blog.example.com`
-- `/멤버추가 김철수 chulsoo 2주1회 LinkedIn:https://linkedin.com/in/chulsoo Instagram:https://instagram.com/chulsoo`
+- `/add-member 이선정 tidyline 2주1회`
+- `/add-member 홍길동 gildong 주1회 Blog:https://blog.example.com`
+- `/add-member 김철수 chulsoo 2주1회 LinkedIn:https://linkedin.com/in/chulsoo Instagram:https://instagram.com/chulsoo`
 
 ## 파라미터
 
