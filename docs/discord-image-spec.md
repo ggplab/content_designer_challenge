@@ -78,7 +78,7 @@ HTML 수정
 <#1473868708261658695> → 매주 인증 (`/인증` 명령어)
 
 📋 **목표 제출 설문** → https://forms.gle/cKdoqzsTsa6zWJww5
-📊 **제출 현황 확인** → https://docs.google.com/spreadsheets/d/18ye_Jyna8OVtsRYpweh706cn3AhbbfScl8h9VxF-R9M/edit?usp=sharing
+📊 **제출 현황 확인** → (설문 시트 — 2026-07-06 비공개 전환, ID는 secrets/sheet-ids.md)
 🌐 **대시보드** → https://ggplab.github.io/content_designer_challenge/
 ```
 

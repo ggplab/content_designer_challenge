@@ -139,7 +139,7 @@ const week = Math.max(1, Math.ceil((days + 1) / 7));
 - 인증: Service Account (`discord-challenge-bot@gen-lang-client-0573007724.iam.gserviceaccount.com`)
 
 **참가 신청 설문 시트** (멤버 SSOT)
-- Sheet ID: `18ye_Jyna8OVtsRYpweh706cn3AhbbfScl8h9VxF-R9M`
+- Sheet ID: 비공개 — `secrets/sheet-ids.md` 참조 (2026-07-06 링크 공유 회수: 이메일 포함 시트라 public ID 노출 금지)
 - 시트 탭: `설문지 응답 시트1`
 - 컬럼: `[0]타임스탬프` | `[1]이름` | `[2]콘텐츠 소재` | `[3]플랫폼` | `[4]업로드 주기` | `[5]목표` | `[6]KPI` | `[7]참여동기` | `[8]이메일` | `[9~16]플랫폼별 링크`
 - 신규 멤버 온보딩 시 이 시트를 기준으로 `web/members.json` 업데이트

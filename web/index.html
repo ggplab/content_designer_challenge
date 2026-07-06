@@ -372,21 +372,6 @@
       return `<span title="${name.trim()}">${PLATFORM_ICONS[key]}</span>`;
     }
 
-    // 설문 링크 컬럼 범위: col9(일반), col10(링크드인)~col16(브런치)
-    const SURVEY_LINK_COL_RANGE = [9, 10, 11, 12, 13, 14, 15, 16];
-
-    // URL에서 플랫폼 감지 (컬럼 순서에 의존하지 않음)
-    function detectPlatformFromUrl(url) {
-      const u = url.toLowerCase();
-      if (u.includes('linkedin.com')) return 'LinkedIn';
-      if (u.includes('instagram.com')) return 'Instagram';
-      if (u.includes('threads.net') || u.includes('threads.com')) return 'Threads'; // threads.com 추가
-      if (u.includes('youtube.com') || u.includes('youtu.be')) return 'YouTube';
-      if (u.includes('tiktok.com')) return 'TikTok';
-      if (u.includes('brunch.co.kr')) return 'Brunch';
-      return 'Blog';
-    }
-
     // ── Discord nickname → real name mapping (loaded from members.json) ──
     let NICKNAME_MAP = {};
     function toRealName(name) {
@@ -395,8 +380,6 @@
 
     // ── Config ──
     const SHEET_ID = '1CKyVexXErtbkAVm6I-30fh3tei6J4B9HtCjq0-fmvvU';
-    const SURVEY_SHEET_ID = '18ye_Jyna8OVtsRYpweh706cn3AhbbfScl8h9VxF-R9M';
-    const SURVEY_GID = '864037745';
     const TOTAL_WEEKS = 12;
     const CHALLENGE_START = new Date('2026-03-02T00:00:00+09:00');
 
@@ -469,31 +452,10 @@
     }
 
     async function fetchSurveyData() {
-      const url = `https://docs.google.com/spreadsheets/d/${SURVEY_SHEET_ID}/gviz/tq?tqx=out:json&gid=${SURVEY_GID}`;
-      const resp = await fetch(url);
-      const text = await resp.text();
-      const json = JSON.parse(text.match(/\{.*\}/s)[0]);
-      return json.table.rows.map(row => {
-        const c = row.c;
-        const links = {};
-        // 컬럼 위치 대신 URL로 플랫폼 감지 → 시트 컬럼 순서 변경에도 안전
-        for (const col of SURVEY_LINK_COL_RANGE) {
-          const v = (c[col]?.v ?? '').trim();
-          if (v && v.startsWith('http')) {
-            const key = detectPlatformFromUrl(v);
-            links[key] = v;
-          }
-        }
-        return {
-          name: c[1]?.v ?? '',
-          topic: c[2]?.v ?? '',
-          platforms: c[3]?.v ?? '',
-          frequency: c[4]?.v ?? '',
-          goal: c[5]?.v ?? '',
-          kpi: c[6]?.v ?? '',
-          links,
-        };
-      });
+      // 챌린지 1기 종료(2026-05-23) 후 설문 시트를 비공개 전환.
+      // 개인정보(이메일 등)를 제외한 표시용 필드만 정적 스냅샷으로 서빙한다.
+      const resp = await fetch('./survey-snapshot.json');
+      return resp.json();
     }
 
     function renderStats(data) {
