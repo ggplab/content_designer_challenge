@@ -1,0 +1,34 @@
+{
+  "_note": [
+    "시즌2 챌린지 설정 문서 (사람용 SSOT). 기획 근거: docs/youtube-challenge-plan.md",
+    "코드 상수와의 동기: 발행 시작일 변경 시 supabase/functions/_shared/week.ts의 PUBLISH_START_DATE(백엔드 SSOT)와 web/index.html의 CHALLENGE_START(정적 대시보드, 별도 번들) 두 곳을 함께 갱신한다.",
+    "참가자 명단 SSOT는 web/members.json — 여기에는 중복 기재하지 않는다 (시즌1 config 삭제 결정 760c4e2 유지)."
+  ],
+  "challenge": {
+    "name": "너만·알맡 시즌2 — 유튜브 에디션",
+    "season": 2,
+    "prep_start_date": "2026-07-07",
+    "prep_end_date": "2026-07-12",
+    "publish_start_date": "2026-07-13",
+    "publish_end_date": "2026-10-04",
+    "total_weeks": 12
+  },
+  "rules": {
+    "weekly_required_count": 1,
+    "week_boundary": "월 00:00 ~ 일 24:00 KST",
+    "overflow_policy": "주 2개 이상 올려도 인정은 1개 (기록은 저장)",
+    "missed_week_policy": "미인증 주는 실패로 기록, 다음 주 정산 카드에 표시 (개별 DM 안내 없음)"
+  },
+  "platforms": ["YouTube"],
+  "url_policy": {
+    "allowed": ["youtube.com/watch", "youtu.be"],
+    "rejected": {
+      "shorts": "youtube.com/shorts/ URL은 인증 거부 (롱폼만 인정)",
+      "other_platforms": "YouTube 외 플랫폼 URL은 인증 거부"
+    }
+  },
+  "rewards": {
+    "medals": false,
+    "streak": "🔥 연속 N주 표시 (메달 🥇🥈🥉 대체) — 정산 카드·인증 응답에 노출"
+  }
+}
