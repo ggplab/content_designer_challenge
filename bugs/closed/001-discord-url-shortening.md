@@ -1,8 +1,10 @@
 # 001 — Discord 응답 URL 단축
 
-**상태**: 미해결
+**상태**: 해결 (2026-04-14)
 **등록일**: 2026-03-02
 **카테고리**: 개선
+
+> 해결 근거: Supabase DB 기반 자체 URL 단축(`r` Edge Function + `_shared/short-links.ts`)으로 구현 완료 — `changelog/2026-04-14.md` 참고.
 
 ## 현상
 Discord `/인증` 완료 메시지에 원본 URL이 그대로 노출되어 메시지가 길어짐.
