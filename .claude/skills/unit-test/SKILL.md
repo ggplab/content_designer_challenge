@@ -1,6 +1,6 @@
 ---
 name: unit-test
-description: Edge Function의 핵심 로직(주차 계산, 플랫폼 분류, 메달 부여, URL 필터)을 유닛 테스트하고 결과를 리포트한다. 코드 변경 후 배포 전에 검증할 때 사용한다.
+description: Edge Function의 핵심 로직(주차 계산, 플랫폼 분류·시즌2 URL 정책, 스트릭 계산, URL 필터)을 유닛 테스트하고 결과를 리포트한다. 코드 변경 후 배포 전에 검증할 때 사용한다.
 ---
 
 Edge Function 핵심 로직을 유닛 테스트하고 결과를 리포트해줘.
@@ -9,10 +9,14 @@ Edge Function 핵심 로직을 유닛 테스트하고 결과를 리포트해줘.
 
 ```
 tests/
-├── discord-verify.test.ts     — getWeekLabel, detectPlatform, getMedal, URL 필터
+├── discord-verify.test.ts     — 스모크: getWeekLabel, checkChallengeUrl(시즌2), URL 필터
+├── discord-verify/services/   — discord, modal, sheets(getWeekCounts·userWeeks), summarizer
+├── weekly-summary/            — summary(달성/미달성·스트릭), services(discord, gemini, sheets)
 └── shared/
     ├── cors.test.ts           — isOriginAllowed, buildCorsHeaders, jsonResponse
     ├── crypto.test.ts         — sha256Hex, createApiKeyPlaintext
+    ├── platform.test.ts       — detectPlatform, isShortsUrl, checkChallengeUrl
+    ├── week.test.ts           — getWeekLabel, parseWeekNumber, calcStreak, formatStreakBadge
     ├── session.test.ts        — getBearerToken
     └── supabase.test.ts       — env getter 함수들 (getSupabaseUrl 등)
 ```

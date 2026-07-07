@@ -1,5 +1,5 @@
 import { assertEquals } from "jsr:@std/assert";
-import { detectPlatform, getMedal } from "../../supabase/functions/_shared/platform.ts";
+import { detectPlatform, isShortsUrl, checkChallengeUrl } from "../../supabase/functions/_shared/platform.ts";
 
 // ── detectPlatform ─────────────────────────────────────────────────────────
 
@@ -39,21 +39,64 @@ Deno.test("detectPlatform: 대소문자 무관", () => {
   assertEquals(detectPlatform("https://LINKEDIN.COM/posts/abc"), "LinkedIn");
 });
 
-// ── getMedal ───────────────────────────────────────────────────────────────
+// ── isShortsUrl (시즌2) ─────────────────────────────────────────────────────
 
-Deno.test("getMedal: 1등 = 🥇", () => {
-  assertEquals(getMedal(1), " 🥇");
+Deno.test("isShortsUrl: shorts URL은 true", () => {
+  assertEquals(isShortsUrl("https://www.youtube.com/shorts/abc123"), true);
 });
 
-Deno.test("getMedal: 2등 = 🥈", () => {
-  assertEquals(getMedal(2), " 🥈");
+Deno.test("isShortsUrl: 모바일 서브도메인 shorts도 true", () => {
+  assertEquals(isShortsUrl("https://m.youtube.com/shorts/abc123"), true);
 });
 
-Deno.test("getMedal: 3등 = 🥉", () => {
-  assertEquals(getMedal(3), " 🥉");
+Deno.test("isShortsUrl: 대소문자 무관", () => {
+  assertEquals(isShortsUrl("https://www.YouTube.com/Shorts/abc"), true);
 });
 
-Deno.test("getMedal: 4등 이상 = 없음", () => {
-  assertEquals(getMedal(4), "");
-  assertEquals(getMedal(10), "");
+Deno.test("isShortsUrl: watch URL은 false", () => {
+  assertEquals(isShortsUrl("https://www.youtube.com/watch?v=abc"), false);
+});
+
+Deno.test("isShortsUrl: youtu.be URL은 false", () => {
+  assertEquals(isShortsUrl("https://youtu.be/abc123"), false);
+});
+
+// ── checkChallengeUrl (시즌2: YouTube 롱폼만 인정) ──────────────────────────
+
+Deno.test("checkChallengeUrl: watch URL 인정", () => {
+  assertEquals(checkChallengeUrl("https://www.youtube.com/watch?v=abc"), {
+    ok: true,
+    platform: "YouTube",
+  });
+});
+
+Deno.test("checkChallengeUrl: youtu.be URL 인정", () => {
+  assertEquals(checkChallengeUrl("https://youtu.be/abc123"), {
+    ok: true,
+    platform: "YouTube",
+  });
+});
+
+Deno.test("checkChallengeUrl: shorts URL 거부 (reason=shorts)", () => {
+  assertEquals(checkChallengeUrl("https://www.youtube.com/shorts/abc123"), {
+    ok: false,
+    reason: "shorts",
+    platform: "YouTube",
+  });
+});
+
+Deno.test("checkChallengeUrl: Instagram 거부 (reason=not_youtube)", () => {
+  assertEquals(checkChallengeUrl("https://www.instagram.com/p/abc"), {
+    ok: false,
+    reason: "not_youtube",
+    platform: "Instagram",
+  });
+});
+
+Deno.test("checkChallengeUrl: 블로그 등 기타 URL 거부", () => {
+  assertEquals(checkChallengeUrl("https://velog.io/@user/post"), {
+    ok: false,
+    reason: "not_youtube",
+    platform: "Blog",
+  });
 });

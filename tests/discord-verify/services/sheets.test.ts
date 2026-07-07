@@ -64,6 +64,27 @@ Deno.test("getWeekCounts: 주차별 유저/전체 카운트 집계", async () =>
     const result = await getWeekCounts("token", "Alice", "1주차");
     assertEquals(result.userCount, 2);
     assertEquals(result.totalCount, 3);
+    assertEquals(result.userWeeks, [1]);
+  } finally {
+    fetchStub.restore();
+  }
+});
+
+Deno.test("getWeekCounts: 유저의 인증 주차 집합(userWeeks) 수집 — 스트릭 계산용", async () => {
+  const mockRows = [
+    ["Alice", "YouTube", "https://a", "1주차-1회"],
+    ["Alice", "YouTube", "https://b", "2주차-1회"],
+    ["Alice", "YouTube", "https://c", "2주차-2회"], // 같은 주 중복 → 1개로
+    ["Bob", "YouTube", "https://d", "3주차-1회"], // 다른 유저 → 제외
+    ["Alice", "YouTube", "https://e", "준비기간-1회"], // 주차 아님 → 제외
+  ];
+  const fetchStub = stub(globalThis, "fetch", () =>
+    Promise.resolve(new Response(JSON.stringify({ values: mockRows }), { status: 200 }))
+  );
+  try {
+    const result = await getWeekCounts("token", "Alice", "2주차");
+    assertEquals(result.userWeeks, [1, 2]);
+    assertEquals(result.userCount, 2);
   } finally {
     fetchStub.restore();
   }
@@ -75,7 +96,7 @@ Deno.test("getWeekCounts: API 오류 → 0으로 fallback", async () => {
   );
   try {
     const result = await getWeekCounts("token", "Alice", "1주차");
-    assertEquals(result, { userCount: 0, totalCount: 0 });
+    assertEquals(result, { userCount: 0, totalCount: 0, userWeeks: [] });
   } finally {
     fetchStub.restore();
   }

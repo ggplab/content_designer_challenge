@@ -1,5 +1,12 @@
 const KST_OFFSET = 9 * 60 * 60 * 1000;
-const PUBLISH_START = new Date("2026-03-02T00:00:00Z");
+
+// ── 시즌 설정 (백엔드 SSOT) ──────────────────────────────────────────────────
+// 시즌2 · 유튜브 에디션 발행 시작일 (월요일, KST). 시작일이 바뀌면 이 상수만 수정한다.
+// 단, 정적 대시보드 web/index.html의 CHALLENGE_START는 별도 번들이므로 함께 갱신할 것.
+// (문서: config/challenge_config.json · docs/youtube-challenge-plan.md)
+export const PUBLISH_START_DATE = "2026-07-13";
+
+const PUBLISH_START = new Date(`${PUBLISH_START_DATE}T00:00:00Z`);
 
 function weekNumber(now: Date): number {
   const kstNow = new Date(now.getTime() + KST_OFFSET);
@@ -23,4 +30,32 @@ export function getPrevWeekLabel(now: Date = new Date()): string {
 
 export function getTodayKST(): string {
   return new Date(Date.now() + KST_OFFSET).toISOString().slice(0, 10);
+}
+
+// ── 스트릭 (시즌2: 메달 🥇🥈🥉 대체) ────────────────────────────────────────
+
+/** 주차 레이블에서 주차 번호 추출 — "3주차" | "3주차-1회" → 3, "준비기간" 등은 null */
+export function parseWeekNumber(label: string): number | null {
+  const m = label.match(/^(\d+)주차/);
+  return m ? Number(m[1]) : null;
+}
+
+/**
+ * fromWeek(기준 주)을 포함해 뒤로 연속 인증한 주 수.
+ * fromWeek 자체가 미인증이면 0.
+ */
+export function calcStreak(verifiedWeeks: Iterable<number>, fromWeek: number): number {
+  const weeks = new Set(verifiedWeeks);
+  let streak = 0;
+  let w = fromWeek;
+  while (w >= 1 && weeks.has(w)) {
+    streak++;
+    w--;
+  }
+  return streak;
+}
+
+/** 스트릭 표시 문자열 — 0이면 빈 문자열 */
+export function formatStreakBadge(streak: number): string {
+  return streak > 0 ? `🔥 ${streak}주 연속` : "";
 }
