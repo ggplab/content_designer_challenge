@@ -128,21 +128,21 @@
 
     /* 인증 버튼 (CTA) */
     .verify-cta {
-      display: block; width: 100%; padding: 18px;
+      display: block; width: 100%; padding: 18px; margin-top: 10px;
       background: var(--accent); color: #fff;
       border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 700;
       cursor: pointer; transition: opacity .15s; text-align: center; letter-spacing: 0.02em;
     }
     .verify-cta:hover { opacity: 0.88; }
 
-    /* 1기 종료 배너 */
-    .season-end-banner {
+    /* 시즌 안내 배너 */
+    .season-banner {
       display: block; width: 100%; padding: 18px;
       background: var(--card); color: var(--text);
       border: 1.5px solid var(--accent); border-radius: 12px;
       text-align: center; font-weight: 700; font-size: 1.05rem; letter-spacing: 0.01em;
     }
-    .season-end-banner .sub {
+    .season-banner .sub {
       display: block; margin-top: 6px;
       font-size: 0.85rem; font-weight: 500; color: var(--muted);
     }
@@ -262,13 +262,15 @@
 
   <header>
     <h1>너만알맡 챌린지</h1>
-    <p>너 만들기만하고, 알고리즘에 맡겨 — 12주 콘텐츠 챌린지</p>
+    <p>너 만들기만하고, 알고리즘에 맡겨 — 시즌2 · 유튜브 에디션 (12주)</p>
   </header>
 
-  <div class="season-end-banner">
-    챌린지 1기가 종료되었습니다
-    <span class="sub">참여해주신 모든 분께 감사드립니다. 2기로 곧 돌아오겠습니다.</span>
+  <div class="season-banner">
+    시즌2 · 유튜브 에디션 진행 중
+    <span class="sub">매주(월~일 KST) 유튜브 롱폼 영상 1개 업로드 — 쇼츠·타 플랫폼 링크는 인정되지 않아요.</span>
   </div>
+
+  <button class="verify-cta" onclick="openVerifyGuide()">Discord에서 인증하기</button>
 
   <!-- 인증 모달 -->
   <div class="modal-overlay" id="verify-modal" onclick="closeOnBackdrop(event)">
@@ -281,6 +283,8 @@
         보안 강화를 위해 웹페이지에서 직접 인증하는 기능은 중단했습니다.
 
         Discord 서버의 <strong>#챌린지-인증</strong> 채널에서 <strong>/인증</strong> 명령으로 제출해주세요.
+
+        시즌2는 <strong>유튜브 롱폼 영상만</strong> 인정됩니다 — youtube.com/watch 또는 youtu.be 링크로 제출해주세요. (쇼츠 링크는 인증이 거부돼요)
 
         외부 자동화 연동 키는 더 이상 공개하지 않으며, 필요하면 운영자가 별도로 발급해야 합니다.
       </div>
@@ -379,9 +383,12 @@
     }
 
     // ── Config ──
+    // 발행 시작일 SSOT는 supabase/functions/_shared/week.ts(PUBLISH_START_DATE) —
+    // 정적 사이트는 번들이 달라 상수를 여기 두므로, 시작일 변경 시 두 곳을 함께 갱신한다.
     const SHEET_ID = '1CKyVexXErtbkAVm6I-30fh3tei6J4B9HtCjq0-fmvvU';
+    const SHEET_TAB = '시트1'; // 시즌2 전용 탭 확정 시 여기만 교체 (Supabase secret GOOGLE_SHEET_TAB과 동기)
     const TOTAL_WEEKS = 12;
-    const CHALLENGE_START = new Date('2026-03-02T00:00:00+09:00');
+    const CHALLENGE_START = new Date('2026-07-13T00:00:00+09:00'); // 시즌2 발행 시작일
 
     // Loaded dynamically from members.json
     let ALL_PARTICIPANTS = [];
@@ -433,7 +440,7 @@
     }
 
     async function fetchSheetData() {
-      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_TAB)}`;
       const resp = await fetch(url);
       const text = await resp.text();
       const json = JSON.parse(text.match(/\{.*\}/s)[0]);
@@ -452,6 +459,7 @@
     }
 
     async function fetchSurveyData() {
+      // 시즌1 설문 스냅샷 (시즌2 미사용 — 보존용).
       // 챌린지 1기 종료(2026-05-23) 후 설문 시트를 비공개 전환.
       // 개인정보(이메일 등)를 제외한 표시용 필드만 정적 스냅샷으로 서빙한다.
       const resp = await fetch('./survey-snapshot.json');
@@ -623,7 +631,14 @@
         `;
       });
 
-      el.innerHTML = [...surveyCards, ...extraCards, ...autoCards].join('');
+      const cards = [...surveyCards, ...extraCards, ...autoCards];
+      // 링크·설문 정보가 아직 없는 시즌2 초기에는 이름/주기 기본 카드로 표시
+      el.innerHTML = cards.length > 0 ? cards.join('') : ALL_PARTICIPANTS.map(p => `
+        <div class="profile-card">
+          <div class="profile-name">${p.name}</div>
+          <div class="profile-field"><strong>${p.freq}</strong> · YouTube 롱폼</div>
+        </div>
+      `).join('');
     }
 
     function renderTimeline(data) {
@@ -650,11 +665,12 @@
     async function init() {
       try {
         await fetchMembers();
-        const [rows, survey] = await Promise.all([fetchSheetData(), fetchSurveyData()]);
-        mergeParticipantsFromSurvey(survey);
+        // 시즌2: 참가자 SSOT는 members.json 2인 — 시즌1 설문 스냅샷은 병합하지 않는다.
+        // (fetchSurveyData/mergeParticipantsFromSurvey는 보존 — 시즌2 설문 도입 시 재사용)
+        const rows = await fetchSheetData();
         renderStats(rows);
         renderLeaderboard(rows);
-        renderProfiles(survey, rows);
+        renderProfiles([], rows);
         renderTimeline(rows);
       } catch (e) {
         console.error('데이터 로딩 실패:', e);
