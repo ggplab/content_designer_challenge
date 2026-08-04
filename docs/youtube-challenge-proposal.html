@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>유튜브 챌린지 제안서 — 매주 딱 1개</title>
+<title>유튜브 위클리 챌린지 제안서 — 매주 딱 1개</title>
 <style>
   :root {
     --paper: #ffffff;
@@ -15,268 +15,305 @@
     --accent: #2563EB;
     --accent-dark: #1D4ED8;
     --accent-light: #60A5FA;
+    --accent-bg: #eff4fe;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     font-family: "Pretendard", "Pretendard Variable", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
-    background: var(--paper-warm);
-    color: var(--ink);
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-  }
-  .page {
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 48px 24px 80px;
-  }
-  .sheet {
     background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    padding: 56px 64px;
+    color: var(--ink);
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+    width: 800px;
+    margin: 0 auto;
   }
-  @media (max-width: 640px) { .sheet { padding: 32px 24px; } }
+  .doc { padding: 56px 52px 40px; }
 
+  /* ---------- 커버 ---------- */
   .eyebrow {
     display: inline-block;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.08em;
     color: var(--accent);
-    border: 1px solid var(--accent-light);
+    border: 1.5px solid var(--accent-light);
     border-radius: 999px;
-    padding: 4px 14px;
-    margin-bottom: 20px;
+    padding: 5px 16px;
+    margin-bottom: 22px;
   }
-  h1 {
-    font-size: 34px;
-    font-weight: 700;
-    line-height: 1.25;
-    letter-spacing: -0.01em;
-    margin-bottom: 12px;
-  }
+  h1 { font-size: 40px; font-weight: 800; line-height: 1.22; letter-spacing: -0.02em; margin-bottom: 14px; }
   h1 .hl { color: var(--accent); }
-  .lede {
-    font-size: 16px;
-    color: var(--ink-soft);
-    max-width: 40em;
-    margin-bottom: 8px;
-  }
-  .meta {
-    font-size: 13px;
-    color: var(--ink-faint);
-    margin-bottom: 40px;
-  }
+  .lede { font-size: 17px; color: var(--ink-soft); max-width: 36em; margin-bottom: 10px; }
+  .meta { font-size: 13.5px; color: var(--ink-faint); }
 
+  /* ---------- 섹션 공통 ---------- */
+  section { margin-top: 52px; }
   h2 {
-    font-size: 19px;
-    font-weight: 700;
-    margin: 44px 0 16px;
-    padding-top: 28px;
-    border-top: 1px solid var(--line);
-    letter-spacing: -0.01em;
+    font-size: 21px; font-weight: 800; letter-spacing: -0.01em;
+    padding-top: 30px; border-top: 1.5px solid var(--line);
+    margin-bottom: 16px;
   }
-  h2 .no {
-    color: var(--accent);
-    font-feature-settings: "tnum";
-    margin-right: 8px;
-  }
-  p { font-size: 15px; margin-bottom: 10px; }
+  h2 .no { color: var(--accent); margin-right: 10px; font-feature-settings: "tnum"; }
+  p { font-size: 15.5px; margin-bottom: 10px; }
   .soft { color: var(--ink-soft); }
+  .caption { font-size: 13px; color: var(--ink-faint); }
 
-  /* 규칙 카드 */
-  .rules { display: grid; gap: 12px; margin: 20px 0 4px; }
-  .rule {
-    display: flex; gap: 16px; align-items: flex-start;
+  /* ---------- 인용 카드 ---------- */
+  .quotes { display: grid; gap: 12px; margin: 18px 0 14px; }
+  .quote {
+    border-left: 4px solid var(--accent);
     background: var(--paper-warm);
-    border: 1px solid var(--line);
-    border-radius: 12px;
+    border-radius: 0 12px 12px 0;
     padding: 16px 20px;
   }
-  .rule .n {
-    flex: none;
-    width: 28px; height: 28px;
-    border-radius: 50%;
-    background: var(--accent);
-    color: #fff;
-    font-size: 14px; font-weight: 700;
-    display: flex; align-items: center; justify-content: center;
-    margin-top: 2px;
-  }
-  .rule b { color: var(--ink); }
-  .rule p { margin: 0; font-size: 15px; }
+  .quote b { display: block; font-size: 16px; margin-bottom: 4px; }
+  .quote p { font-size: 14.5px; color: var(--ink-soft); margin: 0; }
+  .quote-src { font-size: 12.5px; color: var(--ink-faint); margin-top: 4px; }
 
-  /* 핵심 원칙 배너 */
+  /* ---------- 원칙 배너 ---------- */
   .principle {
     background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-    color: #fff;
-    border-radius: 12px;
-    padding: 22px 26px;
-    font-size: 16px;
-    margin: 24px 0 4px;
+    color: #fff; border-radius: 14px;
+    padding: 26px 30px; margin: 22px 0 6px;
   }
-  .principle b { font-size: 18px; }
-  .principle span { opacity: 0.85; font-size: 14px; display: block; margin-top: 6px; }
+  .principle b { font-size: 21px; letter-spacing: -0.01em; }
+  .principle span { opacity: 0.88; font-size: 14.5px; display: block; margin-top: 8px; }
 
-  /* 타임라인 */
-  .timeline { margin: 20px 0 4px; }
-  .tl-bar {
-    display: flex;
-    border-radius: 10px;
-    overflow: hidden;
-    border: 1px solid var(--line);
-    font-size: 13px;
-    font-weight: 700;
-    text-align: center;
+  /* ---------- 규칙 ---------- */
+  .rules { display: grid; gap: 11px; margin: 18px 0 6px; }
+  .rule {
+    display: flex; gap: 15px; align-items: flex-start;
+    background: var(--paper-warm); border: 1px solid var(--line);
+    border-radius: 12px; padding: 15px 19px;
   }
-  .tl-bar .prep { flex: 1; background: var(--paper-warm); color: var(--ink-soft); padding: 12px 6px; }
-  .tl-bar .run  { flex: 6; background: var(--accent); color: #fff; padding: 12px 6px; }
-  .tl-caption {
-    display: flex; justify-content: space-between;
-    font-size: 12.5px; color: var(--ink-faint);
-    margin-top: 8px;
-    font-feature-settings: "tnum";
+  .rule .n {
+    flex: none; width: 27px; height: 27px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    font-size: 14px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; margin-top: 2px;
   }
+  .rule p { margin: 0; font-size: 15px; }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14.5px;
-    margin: 16px 0 4px;
+  /* ---------- 실측 스탯 ---------- */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 18px 0 8px; }
+  .stat {
+    background: var(--accent-bg); border-radius: 12px;
+    padding: 18px 10px; text-align: center;
   }
-  th, td {
-    text-align: left;
-    padding: 11px 14px;
-    border: 1px solid var(--line);
-    vertical-align: top;
+  .stat .v { font-size: 27px; font-weight: 800; color: var(--accent-dark); font-feature-settings: "tnum"; }
+  .stat .k { font-size: 12.5px; color: var(--ink-soft); margin-top: 3px; }
+
+  /* ---------- 대시보드 이미지 슬롯 ---------- */
+  .shot { margin: 16px 0 6px; }
+  .shot img {
+    width: 100%; border: 1px solid var(--line); border-radius: 12px; display: block;
   }
+  .shot .ph {
+    display: none;
+    border: 2px dashed var(--accent-light); border-radius: 12px;
+    background: #fbfcff; color: var(--ink-faint);
+    text-align: center; padding: 64px 20px; font-size: 14px;
+  }
+  .shot.empty img { display: none; }
+  .shot.empty .ph { display: block; }
+
+  /* ---------- 표 ---------- */
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; margin: 16px 0 6px; }
+  th, td { text-align: left; padding: 11px 14px; border: 1px solid var(--line); vertical-align: top; }
   th { background: var(--paper-warm); font-weight: 700; white-space: nowrap; }
-  td .tag {
-    display: inline-block;
-    font-size: 12px; font-weight: 700;
-    color: var(--accent);
-    background: #eff4fe;
-    border-radius: 6px;
-    padding: 2px 8px;
-    margin-right: 6px;
-  }
-  .table-wrap { overflow-x: auto; }
-
-  ul.clean { list-style: none; margin: 12px 0 4px; }
-  ul.clean li {
-    font-size: 15px;
-    padding: 7px 0 7px 26px;
-    position: relative;
-  }
-  ul.clean li::before {
-    content: "·";
-    position: absolute; left: 8px;
-    color: var(--accent);
-    font-weight: 700;
+  .tag {
+    display: inline-block; font-size: 12px; font-weight: 700;
+    color: var(--accent); background: var(--accent-bg);
+    border-radius: 6px; padding: 2px 8px; margin-right: 6px; white-space: nowrap;
   }
 
-  .decisions { display: grid; gap: 10px; margin-top: 16px; }
-  .decision {
-    border: 1px dashed var(--accent-light);
-    border-radius: 10px;
-    padding: 14px 18px;
-    font-size: 14.5px;
-    background: #fbfcff;
+  /* ---------- 타임라인 ---------- */
+  .tl { margin: 20px 0 6px; }
+  .tl-bar { display: flex; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); font-size: 13px; font-weight: 700; text-align: center; }
+  .tl-bar > div { padding: 13px 4px; }
+  .tl-bar .kick { flex: 1.4; background: var(--ink); color: #fff; }
+  .tl-bar .run  { flex: 6; background: var(--accent); color: #fff; }
+  .tl-bar .wrap { flex: 1.4; background: var(--paper-warm); color: var(--ink-soft); }
+  .tl-caption { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--ink-faint); margin-top: 8px; font-feature-settings: "tnum"; }
+
+  /* ---------- 선택지 ---------- */
+  .options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 18px 0 6px; }
+  .option {
+    border: 1.5px solid var(--line); border-radius: 14px; padding: 20px 22px;
   }
-  .decision b { color: var(--accent-dark); }
+  .option h3 { font-size: 16.5px; margin-bottom: 8px; }
+  .option h3 .ab { color: var(--accent); margin-right: 6px; }
+  .option ul { list-style: none; }
+  .option li { font-size: 14px; padding: 4px 0 4px 20px; position: relative; color: var(--ink-soft); }
+  .option li::before { content: "·"; position: absolute; left: 6px; color: var(--accent); font-weight: 700; }
+  .option li.con::before { content: "–"; color: var(--ink-faint); }
+
+  /* ---------- 액션 ---------- */
+  .steps { counter-reset: step; margin: 18px 0 6px; display: grid; gap: 8px; }
+  .step {
+    display: flex; gap: 14px; align-items: baseline;
+    border: 1px solid var(--line); border-radius: 10px; padding: 13px 17px; font-size: 14.5px;
+  }
+  .step::before {
+    counter-increment: step; content: "STEP " counter(step);
+    flex: none; font-size: 11.5px; font-weight: 800; color: var(--accent);
+    letter-spacing: 0.04em; font-feature-settings: "tnum";
+  }
+  .step .who { color: var(--ink-faint); font-size: 12.5px; margin-left: auto; padding-left: 12px; white-space: nowrap; }
 
   footer {
-    margin-top: 56px;
-    padding-top: 20px;
-    border-top: 1px solid var(--line);
-    font-size: 12.5px;
-    color: var(--ink-faint);
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
+    margin-top: 56px; padding-top: 20px; border-top: 1.5px solid var(--line);
+    font-size: 12.5px; color: var(--ink-faint);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
   }
 </style>
 </head>
 <body>
-<div class="page">
-  <div class="sheet">
+<div class="doc">
 
-    <div class="eyebrow">CHALLENGE PROPOSAL · 2026-07</div>
-    <h1>유튜브 챌린지 제안서<br><span class="hl">매주, 딱 1개.</span></h1>
-    <p class="lede">"너 만들기만하고, 알고리즘에 맡겨" — 지난 12주 콘텐츠 챌린지의 검증된 운영 구조를 그대로 물려받고, 시행착오를 손본 유튜브 전용 시즌입니다.</p>
-    <p class="meta">제안: 임정 → 슬기님 · 2026-07-07</p>
+  <!-- 커버 -->
+  <div class="eyebrow">CHALLENGE PROPOSAL · 2026 SEASON 2</div>
+  <h1>유튜브 위클리 챌린지<br><span class="hl">매주, 딱 1개.</span></h1>
+  <p class="lede">12주 동안 매주 유튜브 롱폼 영상 1개를 업로드하는 챌린지입니다. 지난 시즌 20명이 12주를 완주한 콘텐츠 챌린지의 운영 시스템을 그대로 물려받아, 이번에는 유튜브 하나에 집중합니다.</p>
+  <p class="meta">제안 · 임정 × 슬기 · 2026-07-07</p>
 
-    <h2><span class="no">01</span>왜 다시, 왜 유튜브인가</h2>
-    <p>지난 시즌은 "최소 2주에 1회, 플랫폼 자유"였습니다. 유연했지만 그만큼 제작 리듬이 무너지기 쉬웠습니다. 이번 시즌은 규칙을 하나로 줄입니다 — 판정 논쟁이 생길 수 없을 만큼 좁고 명확하게.</p>
-    <div class="principle">
-      <b>매주 유튜브 롱폼 영상 1개를 공개 업로드한다.</b>
-      <span>더도 말고 덜도 말고 1개. 목표는 조회수가 아니라 "매주 찍는 근육"입니다.</span>
+  <!-- 1. 왜 유튜브 -->
+  <section>
+    <h2><span class="no">01</span>왜 지금, 유튜브인가</h2>
+    <p>『스토리 설계자』를 공부하며 정리한 세 가지가 이 챌린지의 출발점입니다.</p>
+    <div class="quotes">
+      <div class="quote">
+        <b>"사람의 주의(attention)가 가장 비싼 시대"</b>
+        <p>지식·콘텐츠로 일하는 사람에게 가장 희소한 자원은 고객의 주의입니다. 그리고 지금 주의가 가장 오래 머무는 곳이 영상입니다.</p>
+      </div>
+      <div class="quote">
+        <b>콜드 트래픽을 데우는 건 짧은 노출이 아니라 긴 신뢰</b>
+        <p>핫/웜/콜드 트래픽 구분에서, 유튜브 롱폼은 나를 모르는 사람(콜드)을 팬(웜·핫)으로 데우는 가장 밀도 높은 매체입니다. 글 1편이 스치는 동안 영상은 몇 분의 체류를 만듭니다.</p>
+      </div>
+      <div class="quote">
+        <b>무료 콘텐츠가 판매의 앞단이 된다</b>
+        <p>"무료 콘텐츠에서 판매를 하는 방법" — 잘 쌓인 무료 콘텐츠 라이브러리는 그 자체로 지식 비즈니스의 영업 자산입니다. 12주 뒤 영상 12개는 그 라이브러리의 초석입니다.</p>
+      </div>
     </div>
+    <p class="caption">출처: 『스토리 설계자』 스터디 노트 (2026-06)</p>
+    <div class="principle">
+      <b>그래서, 매주 유튜브 롱폼 1개.</b>
+      <span>더도 말고 덜도 말고 1개. 목표는 조회수가 아니라 "매주 만드는 근육"입니다. 알고리즘은 그 다음 일입니다.</span>
+    </div>
+  </section>
 
+  <!-- 2. 규칙 -->
+  <section>
     <h2><span class="no">02</span>규칙 — 전부 세 줄</h2>
     <div class="rules">
-      <div class="rule"><div class="n">1</div><p><b>매주(월 00:00 ~ 일 24:00 KST) 롱폼 1개</b>를 공개 업로드하고, 그 주가 끝나기 전에 Discord <b>/인증</b>으로 URL을 제출합니다. 쇼츠는 인정하지 않습니다.</p></div>
-      <div class="rule"><div class="n">2</div><p><b>주 2개를 올려도 인정은 1개.</b> 몰아찍기 방지 — 리듬이 목표이기 때문입니다.</p></div>
-      <div class="rule"><div class="n">3</div><p><b>미인증 주는 실패로 기록</b>되고 다음 주 초 정산 카드에 표시됩니다. 개별 안내 없음 — 둘 뿐이라 서로 다 보입니다.</p></div>
+      <div class="rule"><div class="n">1</div><p><b>매주(월 00:00 ~ 일 24:00) 롱폼 1개</b>를 공개 업로드하고, 그 주가 끝나기 전에 전용 Discord에서 <b>/인증</b>으로 링크를 제출합니다. 쇼츠는 인정하지 않습니다.</p></div>
+      <div class="rule"><div class="n">2</div><p><b>주 2개를 올려도 인정은 1개.</b> 몰아찍기가 아니라 리듬이 목표이기 때문입니다.</p></div>
+      <div class="rule"><div class="n">3</div><p><b>미인증 주는 그대로 기록에 남습니다.</b> 매주 월요일 아침 정산 카드에 ✅/❌와 🔥연속 주차가 자동 게시 — 서로 다 보입니다.</p></div>
     </div>
+    <p class="soft" style="font-size:14px;">인증하면 봇이 영상 정보를 자동으로 읽어 기록하고, 모든 영상은 공개 웹 갤러리에 쌓입니다. 참가자가 하는 일은 <b>업로드하고 링크 한 번 제출</b>, 그게 전부입니다.</p>
+  </section>
 
-    <h2><span class="no">03</span>일정 — 준비 1주 + 발행 12주</h2>
-    <div class="timeline">
+  <!-- 3. 근거 -->
+  <section>
+    <h2><span class="no">03</span>이미 한 번 검증된 판입니다 — 시즌1 실측</h2>
+    <p>이 챌린지는 아이디어가 아니라 재가동입니다. 2026년 봄, 같은 시스템으로 12주 콘텐츠 챌린지("너 만들기만하고, 알고리즘에 맡겨")를 운영했습니다.</p>
+    <div class="stats">
+      <div class="stat"><div class="v">20명</div><div class="k">시즌1 참가자</div></div>
+      <div class="stat"><div class="v">12주</div><div class="k">중단 없이 완주 운영</div></div>
+      <div class="stat"><div class="v">153건</div><div class="k">누적 콘텐츠 인증</div></div>
+      <div class="stat"><div class="v">7종</div><div class="k">플랫폼 (유튜브 인증 22건)</div></div>
+    </div>
+    <div class="shot" id="dash-shot">
+      <img src="season1-dashboard.png" alt="시즌1 챌린지 대시보드 실황"
+           onerror="this.parentElement.classList.add('empty')">
+      <div class="ph">📸 시즌1 대시보드 스크린샷 자리<br><span style="font-size:12px;">(같은 폴더에 season1-dashboard.png 저장 시 자동 표시)</span></div>
+    </div>
+    <p class="caption">시즌1 공개 대시보드 — 인증 자동 집계·주간 정산·갤러리가 12주 동안 사람 손 없이 돌았습니다.</p>
+
+    <table>
+      <tr><th style="width:44%">시즌1에서 겪은 것</th><th>시즌2에 반영한 것</th></tr>
+      <tr><td>"최소 2주 1회, 플랫폼 자유" — 유연했지만 제작 리듬이 무너지기 쉬웠음</td><td><span class="tag">규칙</span>매주 1개 · 유튜브만. 규칙이 하나라 애매함 제로</td></tr>
+      <tr><td>7개 플랫폼 링크 수집 — 일부 플랫폼 인증이 종종 불안정</td><td><span class="tag">안정성</span>유튜브 단일화로 인증 실패 요인 원천 제거</td></tr>
+      <tr><td>메달·순위 중심 보상 — 경쟁보다 지속이 중요했음</td><td><span class="tag">동기</span>나와의 연속 기록(🔥 스트릭) 중심으로 전환</td></tr>
+      <tr><td>온라인으로만 진행 — 시작과 끝의 결속력 아쉬움</td><td><span class="tag">결속</span>킥오프·마무리 오프라인 모임 신설</td></tr>
+    </table>
+  </section>
+
+  <!-- 4. 얻는 것 -->
+  <section>
+    <h2><span class="no">04</span>12주 뒤, 각자 손에 남는 것</h2>
+    <div class="stats" style="grid-template-columns: repeat(3, 1fr);">
+      <div class="stat"><div class="v">12개</div><div class="k">유튜브 롱폼 라이브러리</div></div>
+      <div class="stat"><div class="v">🔥 12주</div><div class="k">주간 업로드 루틴 (스트릭)</div></div>
+      <div class="stat"><div class="v">1개</div><div class="k">공개 아카이브 갤러리</div></div>
+    </div>
+    <p class="soft" style="font-size:14.5px;">여기에 매주 정산 카드로 내 영상의 반응을 함께 확인하고, 마무리 모임에서 12주 데이터를 놓고 회고합니다. 혼자서는 2~3주차에 무너지는 루틴을, 시스템과 동료가 12주까지 끌고 갑니다.</p>
+  </section>
+
+  <!-- 5. 일정 -->
+  <section>
+    <h2><span class="no">05</span>일정 — 킥오프부터 마무리까지</h2>
+    <div class="tl">
       <div class="tl-bar">
-        <div class="prep">준비<br>1주</div>
+        <div class="kick">킥오프<br>오프라인</div>
         <div class="run">발행 12주 — 매주 1개, 총 12개</div>
+        <div class="wrap">마무리<br>모임</div>
       </div>
       <div class="tl-caption">
-        <span>07-07 (월)</span>
-        <span>07-13 (월) 발행 시작</span>
-        <span>10-04 (일) 종료</span>
+        <span>준비 1주 + 킥오프</span>
+        <span>07-13 (월) 시작 제안</span>
+        <span>10-04 (일) 종료 후</span>
       </div>
     </div>
-    <p class="soft" style="font-size:13.5px; margin-top:10px;">준비기간에는 채널 방향·소재 리스트를 정리하고, 리허설 인증을 각 1회 해봅니다. 시작일은 협의 가능합니다.</p>
-
-    <h2><span class="no">04</span>운영 시스템 — 사람이 안 챙겨도 돌아가게</h2>
-    <p class="soft">지난 시즌 12주를 실제로 굴린 자동화를 그대로 씁니다. 참가자가 하는 일은 <b>업로드하고, 링크 한 번 제출</b>하는 것뿐입니다.</p>
-    <div class="table-wrap">
     <table>
-      <tr><th>인증</th><td>전용 Discord 서버에서 <b>/인증</b> 입력 → 링크 제출 → 봇이 자동으로 영상 정보를 읽어 기록. 쇼츠·타 플랫폼 URL은 자동 거부</td></tr>
-      <tr><th>주간 정산</th><td>매주 월요일 아침, 지난주 결과 카드가 자동 게시 — <b>✅ 달성 / ❌ 미달성</b> + 🔥 연속 주차 스트릭</td></tr>
-      <tr><th>갤러리</th><td>제출한 영상이 쌓이는 공개 웹 갤러리 — 12주 뒤 우리 둘의 아카이브가 됩니다</td></tr>
-      <tr><th>스트릭</th><td>메달·순위 대신 <b>연속 달성 주차(🔥 N주)</b>를 추적 — 2인 챌린지에 맞는 동기부여</td></tr>
+      <tr><th style="width:30%">킥오프 (오프라인)</th><td>채널 컨셉 한 줄 + 12주 소재 리스트를 서로 공유하고, 세부 규칙(페널티 등)을 그 자리에서 확정. 리허설 인증 1회로 시스템 체험</td></tr>
+      <tr><th>매주</th><td>업로드 → /인증 → 월요일 아침 자동 정산 카드 (✅/❌ + 🔥스트릭)</td></tr>
+      <tr><th>마무리 모임 (오프라인)</th><td>12주 데이터(업로드·스트릭·반응)를 놓고 회고 + 다음 시즌 여부 결정</td></tr>
     </table>
+    <p class="caption">공개 모집으로 진행할 경우 모집 기간만큼 시작일이 순연될 수 있습니다.</p>
+  </section>
+
+  <!-- 6. 선택지 -->
+  <section>
+    <h2><span class="no">06</span>함께 정할 것 — 어떻게 모을까</h2>
+    <div class="options">
+      <div class="option">
+        <h3><span class="ab">A안</span>인맥 기반 소수 정예</h3>
+        <ul>
+          <li>지인 추천으로 4~6인 구성</li>
+          <li>신뢰 기반이라 완주율·결속력 높음</li>
+          <li>킥오프 오프라인 모임 잡기 수월</li>
+          <li class="con">도달 범위가 좁고, 챌린지의 외부 노출 효과는 제한적</li>
+        </ul>
+      </div>
+      <div class="option">
+        <h3><span class="ab">B안</span>스레드·링크드인 공개 모집</h3>
+        <ul>
+          <li>모집 글 자체가 콘텐츠가 되어 도달 확대</li>
+          <li>다양한 채널·직군의 참가자 유입</li>
+          <li>시즌1 검증 데이터가 모집 글의 근거가 됨</li>
+          <li class="con">선별·온보딩 운영 공수 증가, 시작일 순연 가능</li>
+        </ul>
+      </div>
     </div>
+    <p class="soft" style="font-size:14px;">절충안도 가능합니다 — 코어 멤버는 인맥으로 확정하고, 남는 자리만 공개 모집으로 채우는 방식.</p>
+  </section>
 
-    <h2><span class="no">05</span>지난 시즌에서 배운 것 → 이번에 바꾼 것</h2>
-    <div class="table-wrap">
-    <table>
-      <tr><th style="width:46%">지난 시즌</th><th>이번 시즌</th></tr>
-      <tr><td>최소 2주 1회, 플랫폼 자유 — 리듬 유지 어려움</td><td><span class="tag">규칙</span>매주 1개, 유튜브만. 규칙이 하나라 애매함 제로</td></tr>
-      <tr><td>플랫폼별 링크 수집이 종종 불안정</td><td><span class="tag">안정성</span>유튜브 단일화로 인증 실패 요인 원천 제거</td></tr>
-      <tr><td>순위·메달 중심 — 소수 인원에겐 동기부여 약함</td><td><span class="tag">동기</span>나 자신과의 연속 기록(스트릭) 중심</td></tr>
-      <tr><td>기능이 많아 운영 부담 존재</td><td><span class="tag">단순화</span>인증·정산·갤러리 3가지만 남기고 다이어트</td></tr>
-    </table>
+  <!-- 7. 이후 액션 -->
+  <section>
+    <h2><span class="no">07</span>이후 액션</h2>
+    <div class="steps">
+      <div class="step"><p>이 제안 검토 후 모집 방식(A/B/절충)과 시작일 결정</p><span class="who">임정 × 슬기</span></div>
+      <div class="step"><p>전용 Discord 서버 개설 + 인증 시스템 재가동 (준비 완료 상태)</p><span class="who">임정</span></div>
+      <div class="step"><p>모집: 지인 초대 또는 스레드·링크드인 모집 글 게시</p><span class="who">공동</span></div>
+      <div class="step"><p>킥오프 오프라인 모임 — 소재 리스트 공유, 세부 규칙 확정, 리허설 인증</p><span class="who">전원</span></div>
+      <div class="step"><p>1주차 시작 — 매주 월요일 정산 카드로 리듬 확인</p><span class="who">전원</span></div>
     </div>
+  </section>
 
-    <h2><span class="no">06</span>함께 정하면 좋은 것</h2>
-    <div class="decisions">
-      <div class="decision"><b>① 시작일</b> — 7/13(월) 제안. 다음 주가 어렵다면 7/20도 가능</div>
-      <div class="decision"><b>② 실패했을 때</b> — 없음 / 커피 사기 / 다음 영상 소재 결정권 넘기기 중 택 1 (개인적으론 "가시성만으로 충분하다"에 한 표)</div>
-      <div class="decision"><b>③ 조회수 리포트</b> — 주간 정산에 각 영상 조회수·좋아요 표시 여부 (알고리즘에 맡긴 결과를 눈으로 보는 재미 vs 숫자 스트레스)</div>
-    </div>
+  <footer>
+    <span>YouTube Weekly Challenge · Season 2 Proposal</span>
+    <span>© 2026 BuildnWrite. All rights reserved.</span>
+  </footer>
 
-    <h2><span class="no">07</span>시작하려면</h2>
-    <ul class="clean">
-      <li>이 제안에 OK 주시면 전용 Discord 서버를 만들어 초대드립니다</li>
-      <li>준비기간(첫 주)에 채널 컨셉 한 줄 + 12주 소재 후보를 각자 정리</li>
-      <li>리허설 인증 1회로 시스템 체험 → 7/13(월) 첫 주 시작</li>
-    </ul>
-
-    <footer>
-      <span>YouTube Weekly Challenge · Season 2 Proposal</span>
-      <span>© 2026 BuildnWrite. All rights reserved.</span>
-    </footer>
-
-  </div>
 </div>
 </body>
 </html>
