@@ -1,7 +1,7 @@
 # 유튜브 챌린지 기획안 (시즌2 · 유튜브 에디션)
 
 > ⚠️ **SUPERSEDED (2026-07-07)**: 기획이 "매주 1개" → "2주 사이클(기획+제작) × 6" 구조로 발전하며 전용 프로젝트로 분리됨.
-> 최신 SSOT: `~/Projects/youtube-challenge/README.md` (repo: github.com/ggplab/youtube-challenge) · 제안서: `youtube-challenge/docs/proposal.html`
+> 최신 SSOT: `~/Projects/biz-operation/youtube-challenge/README.md` (repo: github.com/ggplab/youtube-challenge) · 제안서: `youtube-challenge/docs/proposal.html`
 > 이 문서는 시즌1 시행착오 분석·재가동 절차 참고용으로 보존. 아래 §5 코드 준비 커밋은 여전히 유효(차용원).
 
 > 작성: 2026-07-07 · 상태: ~~방향 확정~~ → youtube-challenge로 이관 (시즌1 인프라 재가동 · 새 Discord 서버 · 롱폼만 인정은 유지)

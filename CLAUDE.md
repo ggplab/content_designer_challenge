@@ -1,5 +1,8 @@
 # CLAUDE.md
 
+유형: 상시
+부모: biz-operation
+
 이 파일은 Claude Code가 이 저장소에서 작업할 때 참고하는 가이드입니다.
 
 ## 프로젝트 개요
@@ -157,7 +160,7 @@ const week = Math.max(1, Math.ceil((days + 1) / 7));
 ## 배포
 
 ```bash
-cd /Users/limjung/Projects/content-designer-challenge
+cd /Users/limjung/Projects/biz-operation/content-designer-challenge
 supabase functions deploy discord-verify --project-ref tcxtcacibgoancvoiybx --no-verify-jwt
 ```
 
